@@ -1,0 +1,6 @@
+#ignored :P
+node_modules
+.env
+dist
+.env.local
+.env.production
