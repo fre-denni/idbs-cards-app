@@ -7,6 +7,39 @@
       name="description"
       content="The card-sorting tool from the Interaction Basics course of Politecnico di Milano, bachelor's of Digital Interaction Design. Designed by Federico Denni" />
     <title>IDBS Cards</title>
+    <link rel="stylesheet" href="./css/main.css" />
   </head>
-  <body></body>
+  <body>
+    <div class="auth-container">
+      <h1>IDBS</h1>
+
+      <form id="authForm">
+        <div id="emailSection">
+          <label>Your Polimi Email</label>
+          <input type="email" id="emailInput" required />
+        </div>
+
+        <div id="firstAccessSection" class="hidden">
+          <p>Mail confirmed! First access</p>
+          <label>Insert your Name</label>
+          <input type="text" id="nameInput" />
+          <label>Insert Password (min ~8 characters)</label>
+          <input type="password" id="passwordInput" minlength="8" />
+        </div>
+
+        <div id="returningSection" class="hidden">
+          <p>Mail confirmed!</p>
+          <label>Your Password</label>
+          <input type="password" id="passwordInputReturning" />
+          <p id="forgotPassword">Forgot password?</p>
+        </div>
+
+        <button type="submit" id="mainButton">Check Email</button>
+      </form>
+
+      <p id="errorMessage"></p>
+      <p id="guestLink">I'm just a guest</p>
+    </div>
+    <script type="module" src="./js/auth.js"></script>
+  </body>
 </html>
