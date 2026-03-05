@@ -2,8 +2,6 @@
 
 This project is a web-app for the Interaction Basics course of the bachelor's degree of Digital Interaction Design - Politecnico di Milano. The course is based around redesigning the product-system-interaction of a mid-complexity product (for the course of 2026 is a radio!). This app helps in sorting different design thinking cards (each one with random elements that changes the status quo of the research done by the students). The interface is based on trading cards unpacking, mainly just because is dope, but also because the idea is to make the students have fun.
 
----
-
 Course by professors Mauro Cecconello, Paolo Perego
 TA Federico Denni
 Tutor Cecilia Ferrentino
@@ -17,7 +15,7 @@ License MIT
 
 ### To use and copy this app
 
-You'll need to setup a Supabase dataset (insert here details), then simply git clone this repository and npm install it. The cards design is a 350x700 image file (.webp) designed in Figma, you need to sort and insert them in `public/cards`. The type of cards listed are:
+You'll need to setup a Supabase dataset (insert here details), then simply git clone this repository and npm install it. The cards design is a 350x600 image file (.webp) designed in Figma, you need to sort and insert them in `public/cards`. The type of cards listed are:
 
 - Jobs-to-be-done (jobs): best setup these considering your product to be redesigned - for the Empathy Phase;
 - Intended uses of object (use): what agency will the object have on the user? - for the Define Phase;
@@ -28,4 +26,6 @@ You'll need to setup a Supabase dataset (insert here details), then simply git c
 
 If you are curios about the project and want to learn more, contact Federico Denni at: federico.denni@polimi.it or on his github account.
 
-🇵🇸 Free Palestine 🇵🇸
+---
+
+## 🇵🇸 Free Palestine 🇵🇸

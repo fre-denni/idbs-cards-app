@@ -12,7 +12,7 @@ export async function requireAuth() {
     .from("students")
     .select("*")
     .eq("auth_user_id", data.session.user.id)
-    .single();
+    .maybeSingle();
 
   if (!student) {
     await supabase.auth.signOut();

@@ -1,3 +1,328 @@
-.hidden {
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+              FONTS
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+@font-face {
+  font-display: swap;
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400;
+  src:
+    local("Instrument Sans"),
+    url("/assets/fonts/instrument-sans-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Departure Mono";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/assets/fonts/DepartureMono-Regular.woff2") format("woff2");
+}
+
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+        DESIGN TOKENS
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+:root {
+  /* COLORS */
+  --white: #ffffff;
+  --black: #000000;
+  --secondary-gray: #969696;
+
+  /* SEMANTIC COLORS */
+  --color-text-primary: var(--white);
+  --color-text-secondary: var(--secondary-gray);
+  --color-border-default: var(--secondary-gray);
+  --color-border-active: var(--white);
+
+  /* SPACING */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  /* RADIUS */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+
+  /* BORDER */
+  --border-default: 1px solid var(--color-border-default);
+
+  /* TRANSITIONS */
+  --transition-fast: 0.15s ease;
+
+  font-size: 14px;
+}
+
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+            TYPOGRAPHY
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+.text-logo-header {
+  font-family: "Departure Mono";
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 100%;
+}
+
+.text-item-header {
+  font-family: "Instrument Sans", Arial, Helvetica, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 115%;
+  text-transform: uppercase;
+}
+
+.text-small-body {
+  font-family: "Instrument Sans", Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 115%;
+}
+
+.text-item-footer {
+  font-family: "Instrument Sans", Arial, Helvetica, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 145%;
+}
+
+.text-logo-footer {
+  font-family: "Departure Mono";
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 145%;
+}
+
+.text-h1-header {
+  font-family: "Departure Mono";
+  font-size: 3rem;
+  font-weight: 400;
+  line-height: 155%;
+  text-transform: uppercase;
+}
+
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+                BASE
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--black);
+  font-family: "Instrument Sans", Arial, Helvetica, sans-serif;
+  color: var(--color-text-primary);
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+            LAYOUT
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+header {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-lg);
+  padding: 0.75rem 3.75rem 0 3.75rem;
+  flex-wrap: wrap;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+footer {
+  display: inline-grid;
+  width: 100%;
+  padding: 0.5rem 2rem 1rem 2rem;
+  row-gap: var(--space-sm);
+  column-gap: var(--space-sm);
+  grid-template-columns: minmax(0, 1fr) fit-content(100%) fit-content(100%);
+}
+
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+                FORM
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+.auth-container {
+  width: 25rem;
+  min-width: 20rem;
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+
+  border-radius: var(--radius-md);
+  border: var(--border-default);
+  background: var(--black);
+}
+
+.auth-brand {
+  width: 100%;
+  text-align: center;
+}
+
+/* Form structure */
+
+#authForm,
+#resetForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+#emailSection,
+#firstAccessSection,
+#returningSection,
+.form-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Labels */
+
+#authForm label {
+  color: var(--white);
+}
+
+/* Inputs */
+
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  width: 100%;
+  padding: var(--space-md);
+
+  border-radius: var(--radius-sm);
+  border: var(--border-default);
+  background: var(--black);
+
+  color: var(--color-text-primary);
+
+  outline: none;
+  transition:
+    border var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+input:focus {
+  border: 1px solid var(--color-border-active);
+}
+
+input:disabled {
+  border: var(--border-default);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+/* Email confirmation state */
+
+#emailConfirmedMessage {
+  color: var(--color-text-secondary);
+}
+
+.email-locked #emailInput {
   display: none;
+}
+
+.email-locked #emailConfirmedMessage {
+  display: block;
+}
+
+/* Button */
+
+button {
+  width: 100%;
+  padding: var(--space-md);
+
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--white);
+  background: var(--black);
+
+  color: var(--color-text-primary);
+  cursor: pointer;
+
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+button:hover {
+  background: var(--white);
+  color: var(--black);
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--white);
+}
+
+/* Secondary text */
+
+#forgotPassword {
+  color: var(--color-text-secondary);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  text-underline-position: from-font;
+  cursor: pointer;
+}
+
+#forgotPassword:hover {
+  color: var(--white);
+}
+
+#guestLink {
+  color: var(--white);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-skip-ink: auto;
+  text-decoration-thickness: auto;
+  text-underline-offset: auto;
+  text-underline-position: from-font;
+}
+
+/* Utility */
+
+.hidden {
+  display: none !important;
 }

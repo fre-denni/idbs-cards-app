@@ -10,36 +10,72 @@
     <link rel="stylesheet" href="./css/main.css" />
   </head>
   <body>
-    <div class="auth-container">
-      <h1>IDBS</h1>
+    <header>
+      <p class="text-logo-header">IDBS</p>
+      <p class="text-item-header">Interaction Design Basics</p>
+    </header>
+    <main>
+      <div class="auth-container">
+        <h1 class="auth-brand text-logo-header">IDBS</h1>
 
-      <form id="authForm">
-        <div id="emailSection">
-          <label>Your Polimi Email</label>
-          <input type="email" id="emailInput" required />
-        </div>
+        <form id="authForm">
+          <div id="emailSection">
+            <label id="emailLabel" class="text-small-body">
+              Your Polimi Email
+            </label>
 
-        <div id="firstAccessSection" class="hidden">
-          <p>Mail confirmed! First access</p>
-          <label>Insert your Name</label>
-          <input type="text" id="nameInput" />
-          <label>Insert Password (min ~8 characters)</label>
-          <input type="password" id="passwordInput" minlength="8" />
-        </div>
+            <input
+              type="email"
+              id="emailInput"
+              class="text-small-body"
+              placeholder="Insert your Polimi mail"
+              required />
 
-        <div id="returningSection" class="hidden">
-          <p>Mail confirmed!</p>
-          <label>Your Password</label>
-          <input type="password" id="passwordInputReturning" />
-          <p id="forgotPassword">Forgot password?</p>
-        </div>
+            <p id="emailConfirmedMessage" class="hidden text-small-body">
+              Mail confirmed!
+            </p>
+          </div>
 
-        <button type="submit" id="mainButton">Check Email</button>
-      </form>
+          <div id="firstAccessSection" class="hidden">
+            <label class="text-small-body">Insert your Name</label>
+            <input
+              type="text"
+              id="nameInput"
+              class="text-small-body"
+              placeholder="Insert your name or nickname" />
 
-      <p id="errorMessage"></p>
-      <p id="guestLink">I'm just a guest</p>
-    </div>
+            <label class="text-small-body">
+              Insert Password (min ~8 characters)
+            </label>
+            <input
+              type="password"
+              id="passwordInput"
+              class="text-small-body"
+              minlength="8"
+              placeholder="Insert password (min 8 characters)" />
+          </div>
+
+          <div id="returningSection" class="hidden">
+            <label class="text-small-body">Your Password</label>
+            <input
+              type="password"
+              id="passwordInputReturning"
+              class="text-small-body"
+              placeholder="Insert password" />
+
+            <p id="forgotPassword" class="text-small-body">Forgot password?</p>
+          </div>
+
+          <button type="submit" id="mainButton" class="text-small-body">
+            Check Email
+          </button>
+        </form>
+
+        <p id="errorMessage" class="text-small-body"></p>
+        <p id="guestLink" class="text-small-body hidden">I'm just a guest</p>
+      </div>
+    </main>
+    <footer></footer>
     <script type="module" src="./js/auth.js"></script>
   </body>
 </html>
