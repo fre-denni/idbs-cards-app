@@ -1,101 +1,42 @@
 import { supabase } from "./supabaseClient.js";
 
+// ─── DOM refs ───────────────────────────────────────────────────────────────
 const form = document.getElementById("authForm");
 const emailInput = document.getElementById("emailInput");
-const errorMessage = document.getElementById("errorMessage");
+const otpSection = document.getElementById("otpSection");
+const otpInput = document.getElementById("otpInput");
 const mainButton = document.getElementById("mainButton");
+const errorMessage = document.getElementById("errorMessage");
+const statusMessage = document.getElementById("statusMessage");
+const resendBtn = document.getElementById("resendBtn");
+const emailDisplay = document.getElementById("emailDisplay");
 
-const firstAccessSection = document.getElementById("firstAccessSection");
-const returningSection = document.getElementById("returningSection");
-
-const emailSection = document.getElementById("emailSection");
-const emailLabel = document.getElementById("emailLabel");
-const emailConfirmedMessage = document.getElementById("emailConfirmedMessage");
-
+// ─── State ──────────────────────────────────────────────────────────────────
 let currentStudent = null;
-let state = "email"; // email | firstAccess | returning | resetSent | confirmSent
+let currentEmail = null;
+let state = "email"; // "email" | "otp"
 let isLoading = false;
 
-/* ------------------------------------------------
-   1) ON-AUTH listener: cattura SIGNED_IN subito
-   ------------------------------------------------ */
-supabase.auth.onAuthStateChange(async (event, session) => {
-  try {
-    if (event === "SIGNED_IN" && session) {
-      const user = session.user;
-
-      // trova lo studente tramite email
-      const { data: student } = await supabase
-        .from("students")
-        .select("*")
-        .eq("email", user.email)
-        .maybeSingle();
-
-      if (!student) {
-        // non c'è registro students per quest'email: fai signOut (sicurezza)
-        await supabase.auth.signOut();
-        return;
-      }
-
-      // collega auth_user_id se necessario
-      if (!student.auth_user_id) {
-        await supabase
-          .from("students")
-          .update({ auth_user_id: user.id })
-          .eq("id", student.id);
-      }
-
-      // redirect verso la pagina corretta
-      if (student.role === "admin") {
-        window.location.replace("/admin.html");
-      } else {
-        window.location.replace("/dashboard.html");
-      }
-    }
-  } catch (err) {
-    console.error("onAuthStateChange handler error", err);
-  }
-});
-
-/* ------------------------------------------------
-   2) Bootstrap: piccolo fallback per race condition
-   - aspetta brevemente, poi controlla getSession()
-   ------------------------------------------------*/
+// ─── Bootstrap: se l'utente ha già una sessione, redirect immediato ──────────
 (async () => {
-  // breve delay per lasciare il tempo a supabase di processare hash se presente
-  await new Promise((r) => setTimeout(r, 120));
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return;
 
-  try {
-    const { data } = await supabase.auth.getSession();
+  const { data: student } = await supabase
+    .from("students")
+    .select("role")
+    .eq("auth_user_id", data.session.user.id)
+    .maybeSingle();
 
-    if (!data.session) return;
-
-    // se c'è una sessione, cerca lo studente tramite auth_user_id
-    const { data: student } = await supabase
-      .from("students")
-      .select("*")
-      .eq("auth_user_id", data.session.user.id)
-      .maybeSingle();
-
-    if (!student) {
-      // sessione esistente ma non c'è riga students -> sign out
-      await supabase.auth.signOut();
-      return;
-    }
-
-    if (student.role === "admin") {
-      window.location.replace("/admin.html");
-    } else {
-      window.location.replace("/dashboard.html");
-    }
-  } catch (err) {
-    console.error("bootstrap session check error", err);
+  if (!student) {
+    await supabase.auth.signOut();
+    return;
   }
+
+  redirect(student.role);
 })();
 
-/* -------------------------
-   FORM SUBMISSION HANDLER
-   ------------------------- */
+// ─── Form submit ────────────────────────────────────────────────────────────
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (isLoading) return;
@@ -103,209 +44,139 @@ form.addEventListener("submit", async (e) => {
 
   try {
     if (state === "email") {
-      await handleEmailCheck();
-    } else if (state === "firstAccess") {
-      await completeFirstAccess();
-    } else if (state === "returning") {
-      await loginReturningUser();
+      await handleEmailStep();
+    } else if (state === "otp") {
+      await handleOtpStep();
     }
   } finally {
     setLoading(false);
   }
 });
 
-/* -------------------------
-   handleEmailCheck
-   - if there is an active session for a different user -> signOut()
-   - then lookup student by email as anon
-   ------------------------- */
-async function handleEmailCheck() {
+// ─── Step 1: controlla email e invia OTP ────────────────────────────────────
+async function handleEmailStep() {
   errorMessage.innerText = "";
-
   const email = emailInput.value.trim().toLowerCase();
   if (!email) return;
 
-  // if there's an active session for another user, sign it out so the lookup runs as anon
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (sessionData.session && sessionData.session.user?.email !== email) {
-      await supabase.auth.signOut();
-    }
-  } catch (e) {
-    console.warn("session check error before lookup", e);
-  }
-
-  const { data } = await supabase
+  // 1) Controlla che l'email sia nella lista studenti
+  const { data: student } = await supabase
     .from("students")
     .select("*")
     .eq("email", email)
     .maybeSingle();
 
-  if (!data) {
+  if (!student) {
     errorMessage.innerText =
-      "You are not on the list of students of this year! If you think it's an error please contact: federico.denni@polimi.it";
+      "Email not founded in the students list. Contact federico.denni@polimi.it if you think is an error.";
     return;
   }
 
-  currentStudent = data;
+  // 2) Manda OTP
+  const sent = await sendOtp(email);
+  if (!sent) return;
+
+  // 3) Aggiorna stato e UI
+  currentStudent = student;
+  currentEmail = email;
+  state = "otp";
+
   emailInput.disabled = true;
-  lockEmailUI();
-
-  if (!data.auth_user_id) {
-    state = "firstAccess";
-    showFirstAccess();
-  } else {
-    state = "returning";
-    showReturning();
-  }
-
-  mainButton.innerText = "Sign In";
+  emailDisplay.innerText = email;
+  otpSection.classList.remove("hidden");
+  otpInput.focus();
+  mainButton.innerText = "Verify Code";
+  statusMessage.innerText = `6-digit code sent to ${email}`;
+  resendBtn.classList.remove("hidden");
 }
 
-/* -------------------------
-   completeFirstAccess => signUp
-   - supabase will send confirmation email if enabled
-   - we show confirmSent UI (user must click email)
-   ------------------------- */
-async function completeFirstAccess() {
+// ─── Step 2: verifica OTP e redirect ────────────────────────────────────────
+async function handleOtpStep() {
   errorMessage.innerText = "";
+  const token = otpInput.value.trim().replace(/\s/g, "");
 
-  const password = document.getElementById("passwordInput").value;
-  const name = document.getElementById("nameInput").value;
-
-  if (!password || password.length < 8) {
-    errorMessage.innerText = "Password must be at least 8 characters";
+  if (!token || token.length !== 6 || !/^\d{6}$/.test(token)) {
+    errorMessage.innerText = "Inser the 6-digit code sent to your inbox";
     return;
   }
 
-  const { data: signupData, error } = await supabase.auth.signUp({
-    email: currentStudent.email,
-    password,
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: currentEmail,
+    token,
+    type: "email",
+  });
+
+  console.log("verifyOtp error:", error);
+  console.log("verifyOtp data:", data);
+  console.log("verifyOtp session:", data?.session);
+  console.log("localStorage keys:", Object.keys(localStorage));
+
+  if (error) {
+    errorMessage.innerText = "Code not valid or expired. Ask for a new code.";
+    otpInput.value = "";
+    otpInput.focus();
+    return;
+  }
+
+  // Collega auth_user_id nello studente se non è ancora settato
+  const userId = data?.user?.id;
+  if (userId && !currentStudent.auth_user_id) {
+    await supabase
+      .from("students")
+      .update({ auth_user_id: userId })
+      .eq("email", currentEmail);
+  }
+
+  // Recupera role aggiornato (nel dubbio, usa quello già in memoria)
+  const { data: fresh } = await supabase
+    .from("students")
+    .select("role")
+    .eq("email", currentEmail)
+    .maybeSingle();
+
+  redirect(fresh?.role ?? currentStudent.role);
+}
+
+// ─── Resend OTP ─────────────────────────────────────────────────────────────
+resendBtn?.addEventListener("click", async () => {
+  errorMessage.innerText = "";
+  resendBtn.disabled = true;
+  const sent = await sendOtp(currentEmail);
+  if (sent) {
+    statusMessage.innerText = `New code sent to: ${currentEmail}`;
+  }
+  // riabilita dopo 30 secondi per evitare spam
+  setTimeout(() => {
+    resendBtn.disabled = false;
+  }, 30_000);
+});
+
+// ─── Helper: invia OTP via Supabase ─────────────────────────────────────────
+async function sendOtp(email) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
   });
 
   if (error) {
     errorMessage.innerText = error.message;
-    return;
+    return false;
   }
-
-  // show confirmation UI: the actual session will be created when user clicks the confirmation link
-  showConfirmationSentUI(currentStudent.email);
-
-  // store name in students table (auth_user_id will be set later when signed in)
-  if (name && name.trim().length > 0) {
-    await supabase
-      .from("students")
-      .update({ name: name })
-      .eq("id", currentStudent.id);
-  }
+  return true;
 }
 
-/* -------------------------
-   loginReturningUser => signIn
-   - after success, update students.auth_user_id if missing
-   - then redirect (onAuth listener will also trigger; but we explicitly fetch & redirect here)
-   ------------------------- */
-async function loginReturningUser() {
-  errorMessage.innerText = "";
-  const password = document.getElementById("passwordInputReturning").value;
-
-  const { data: signInData, error } = await supabase.auth.signInWithPassword({
-    email: currentStudent.email,
-    password,
-  });
-
-  if (error) {
-    errorMessage.innerText = "Wrong password";
-    return;
-  }
-
-  // signIn success: ensure students.auth_user_id is set (id taken from session)
-  const userId = signInData?.data?.user?.id || signInData?.user?.id || null;
-  if (userId) {
-    await supabase
-      .from("students")
-      .update({ auth_user_id: userId })
-      .eq("id", currentStudent.id)
-      .is("auth_user_id", null);
-  }
-
-  // fetch fresh student and redirect
-  const { data: updatedStudent } = await supabase
-    .from("students")
-    .select("*")
-    .eq("id", currentStudent.id)
-    .maybeSingle();
-
-  if (updatedStudent?.role === "admin") {
-    window.location.replace("/admin.html");
-  } else {
-    window.location.replace("/dashboard.html");
-  }
+// ─── Helper: redirect per role ───────────────────────────────────────────────
+function redirect(role) {
+  window.location.replace(role === "admin" ? "/admin.html" : "/dashboard.html");
 }
 
-/* -------------------------
-   UI helpers
-   ------------------------- */
-function showFirstAccess() {
-  firstAccessSection.classList.remove("hidden");
-  returningSection.classList.add("hidden");
-}
-function showReturning() {
-  returningSection.classList.remove("hidden");
-  firstAccessSection.classList.add("hidden");
-}
-function lockEmailUI() {
-  emailSection.classList.add("email-locked");
-  emailConfirmedMessage.classList.remove("hidden");
-}
+// ─── Helper: loading state ───────────────────────────────────────────────────
 function setLoading(status) {
   isLoading = status;
+  mainButton.disabled = status;
   if (status) {
-    mainButton.disabled = true;
     mainButton.innerText = "Loading...";
   } else {
-    mainButton.disabled = false;
+    mainButton.innerText = state === "email" ? "Check email" : "Verify Code";
   }
-}
-function showResetSentUI(email) {
-  state = "resetSent";
-  firstAccessSection.classList.add("hidden");
-  returningSection.classList.add("hidden");
-  emailInput.disabled = true;
-  emailLabel.innerText = "A link to reset password has been sent to:";
-  emailConfirmedMessage.innerText = email;
-  emailConfirmedMessage.classList.remove("hidden");
-  mainButton.classList.add("hidden");
-}
-function showConfirmationSentUI(email) {
-  state = "confirmSent";
-  firstAccessSection.classList.add("hidden");
-  returningSection.classList.add("hidden");
-  emailInput.disabled = true;
-  emailLabel.innerText = "A confirmation link has been sent to:";
-  emailConfirmedMessage.innerText = email;
-  emailConfirmedMessage.classList.remove("hidden");
-  mainButton.classList.add("hidden");
-}
-
-/* -------------------------
-   Forgot password handler
-   ------------------------- */
-const forgotPassword = document.getElementById("forgotPassword");
-if (forgotPassword) {
-  forgotPassword.addEventListener("click", async () => {
-    const email = emailInput.value.trim().toLowerCase();
-    if (!email) {
-      errorMessage.innerText = "Please enter your email first.";
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/reset.html",
-    });
-    if (error) {
-      errorMessage.innerText = error.message;
-    } else {
-      showResetSentUI(email);
-    }
-  });
 }

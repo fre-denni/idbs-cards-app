@@ -220,9 +220,7 @@ footer {
 
 /* Inputs */
 
-input[type="email"],
-input[type="password"],
-input[type="text"] {
+#emailInput {
   width: 100%;
   padding: var(--space-md);
 
@@ -325,4 +323,112 @@ button:focus {
 
 .hidden {
   display: none !important;
+}
+
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+           OTP INPUT
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+.otp-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.otp-group {
+  display: flex;
+}
+
+#otpSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.otp-cell {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  background: var(--black);
+  border: 1px solid #545353;
+  color: var(--color-text-primary);
+
+  font-family: "Departure Mono";
+  font-size: 1rem;
+  text-align: center;
+
+  outline: none;
+  transition:
+    border var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* Bordi arrotondati solo ai lati esterni del gruppo */
+.otp-cell-left {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-right: none;
+}
+
+.otp-cell-mid {
+  border-radius: 0;
+  border-right: none;
+}
+
+.otp-cell-right {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.otp-cell:focus {
+  border-color: var(--color-border-active);
+  z-index: 1;
+}
+
+/* Punto divisore tra i due gruppi */
+.otp-divider {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--secondary-gray);
+  flex-shrink: 0;
+}
+
+/*
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+         RESEND BUTTON
+-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+*/
+
+#resendBtn {
+  width: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: auto;
+
+  cursor: pointer;
+}
+
+#resendBtn:hover {
+  background: transparent;
+  color: var(--white);
+}
+
+#resendBtn:focus {
+  box-shadow: none;
+}
+
+#resendBtn:disabled {
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+  cursor: not-allowed;
 }

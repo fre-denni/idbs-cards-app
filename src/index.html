@@ -14,68 +14,144 @@
       <p class="text-logo-header">IDBS</p>
       <p class="text-item-header">Interaction Design Basics</p>
     </header>
+
     <main>
       <div class="auth-container">
         <h1 class="auth-brand text-logo-header">IDBS</h1>
 
         <form id="authForm">
+          <!-- Step 1: Email -->
           <div id="emailSection">
-            <label id="emailLabel" class="text-small-body">
-              Your Polimi Email
-            </label>
-
+            <label class="text-small-body">Your Polimi Mail</label>
             <input
               type="email"
               id="emailInput"
               class="text-small-body"
-              placeholder="Insert your Polimi mail"
+              placeholder="Insert you @polimi mail"
+              autocomplete="email"
               required />
-
-            <p id="emailConfirmedMessage" class="hidden text-small-body">
-              Mail confirmed!
-            </p>
           </div>
 
-          <div id="firstAccessSection" class="hidden">
-            <label class="text-small-body">Insert your Name</label>
-            <input
-              type="text"
-              id="nameInput"
-              class="text-small-body"
-              placeholder="Insert your name or nickname" />
+          <!-- Step 2: OTP (nascosto finché non viene inviato il codice) -->
+          <div id="otpSection" class="hidden">
+            <p id="statusMessage" class="text-small-body"></p>
+            <!-- Campo nascosto che auth.js continua a leggere -->
+            <input type="hidden" id="otpInput" />
 
-            <label class="text-small-body">
-              Insert Password (min ~8 characters)
-            </label>
-            <input
-              type="password"
-              id="passwordInput"
-              class="text-small-body"
-              minlength="8"
-              placeholder="Insert password (min 8 characters)" />
-          </div>
+            <div class="otp-wrapper">
+              <div class="otp-group">
+                <input
+                  type="text"
+                  class="otp-cell otp-cell-left"
+                  data-otp="0"
+                  inputmode="numeric"
+                  maxlength="1"
+                  autocomplete="one-time-code" />
+                <input
+                  type="text"
+                  class="otp-cell otp-cell-mid"
+                  data-otp="1"
+                  inputmode="numeric"
+                  maxlength="1" />
+                <input
+                  type="text"
+                  class="otp-cell otp-cell-right"
+                  data-otp="2"
+                  inputmode="numeric"
+                  maxlength="1" />
+              </div>
+              <span class="otp-divider"></span>
+              <div class="otp-group">
+                <input
+                  type="text"
+                  class="otp-cell otp-cell-left"
+                  data-otp="3"
+                  inputmode="numeric"
+                  maxlength="1" />
+                <input
+                  type="text"
+                  class="otp-cell otp-cell-mid"
+                  data-otp="4"
+                  inputmode="numeric"
+                  maxlength="1" />
+                <input
+                  type="text"
+                  class="otp-cell otp-cell-right"
+                  data-otp="5"
+                  inputmode="numeric"
+                  maxlength="1" />
+              </div>
+            </div>
 
-          <div id="returningSection" class="hidden">
-            <label class="text-small-body">Your Password</label>
-            <input
-              type="password"
-              id="passwordInputReturning"
-              class="text-small-body"
-              placeholder="Insert password" />
-
-            <p id="forgotPassword" class="text-small-body">Forgot password?</p>
+            <p id="emailDisplay" class="text-small-body hidden"></p>
           </div>
 
           <button type="submit" id="mainButton" class="text-small-body">
-            Check Email
+            Check email
           </button>
         </form>
 
         <p id="errorMessage" class="text-small-body"></p>
-        <p id="guestLink" class="text-small-body hidden">I'm just a guest</p>
+
+        <!-- Resend button, visibile solo allo step OTP -->
+        <button id="resendBtn" class="text-small-body hidden">
+          Didn't receive the code? Send it again
+        </button>
       </div>
     </main>
+
     <footer></footer>
+
     <script type="module" src="./js/auth.js"></script>
+    <script>
+      // ─── OTP input behaviour ──────────────────────────────────────────
+      (() => {
+        const cells = document.querySelectorAll(".otp-cell");
+        const hidden = document.getElementById("otpInput");
+
+        function syncHidden() {
+          hidden.value = Array.from(cells)
+            .map((c) => c.value)
+            .join("");
+        }
+
+        cells.forEach((cell, i) => {
+          // Input singolo → avanza al prossimo
+          cell.addEventListener("input", () => {
+            cell.value = cell.value.replace(/\D/g, "").slice(-1);
+            syncHidden();
+            if (cell.value && i < cells.length - 1) cells[i + 1].focus();
+          });
+
+          // Backspace → cancella e torna indietro
+          cell.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && !cell.value && i > 0) {
+              cells[i - 1].focus();
+              cells[i - 1].value = "";
+              syncHidden();
+            }
+          });
+
+          // Paste → distribuisce le cifre su tutti i campi
+          cell.addEventListener("paste", (e) => {
+            e.preventDefault();
+            const paste = (e.clipboardData.getData("text") || "").replace(
+              /\D/g,
+              "",
+            );
+            if (!paste) return;
+            for (let j = 0; j < cells.length; j++) {
+              cells[j].value = paste[j] || "";
+            }
+            syncHidden();
+            const nextEmpty = Array.from(cells).findIndex((c) => !c.value);
+            (nextEmpty === -1
+              ? cells[cells.length - 1]
+              : cells[nextEmpty]
+            ).focus();
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
