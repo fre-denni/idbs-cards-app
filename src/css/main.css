@@ -57,6 +57,7 @@
   /* TRANSITIONS */
   --transition-fast: 0.15s ease;
 
+  /* setup rem size*/
   font-size: 14px;
 }
 
@@ -104,7 +105,7 @@
 
 .text-h1-header {
   font-family: "Departure Mono";
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 400;
   line-height: 155%;
   text-transform: uppercase;
@@ -143,10 +144,13 @@ body {
 */
 
 header {
-  width: 100%;
+  align-self: start;
+  width: 48rem;
+  min-width: 24rem;
+  max-width: 48rem;
   display: flex;
   align-items: baseline;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   padding: 0.75rem 3.75rem 0 3.75rem;
   flex-wrap: wrap;
 }

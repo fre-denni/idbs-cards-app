@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "atropos": "^2.0.2"
+    "atropos": "^2.0.2",
+    "hover-tilt": "^1.0.0"
   },
   "devDependencies": {
     "vite": "^5.0.0"

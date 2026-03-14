@@ -3,11 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <meta
+      name="description"
+      content="The card-sorting tool from the Interaction Basics course of Politecnico di Milano, bachelor's of Digital Interaction Design. Designed by Federico Denni" />
+    <title>IDBS Cards</title>
+    <link rel="stylesheet" href="./css/main.css" />
+    <link rel="stylesheet" href="./css/dashboard.css" />
   </head>
   <body>
-    <h1>Dashboard</h1>
-    <button id="logoutBtn">Logout</button>
+    <header>
+      <p id="logoutArr" class="text-logo-header" style="cursor: pointer">
+        &larr; IDBS
+      </p>
+      <p class="text-item-header">Interaction Design Basics</p>
+      <div class="content">
+        <div class="content-header">
+          <p class="text-small-body">Group n°<span id="groupName">0</span></p>
+          <p class="text-h1-header">Hi <span id="userName">Name</span>!</p>
+        </div>
+        <p class="text-item-header" style="text-transform: uppercase">
+          How the cards work
+        </p>
+        <p>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe alias
+          quibusdam sequi quae commodi aperiam recusandae dignissimos velit quis
+          ut. Dolore, ducimus! Sunt eveniet ullam unde maxime deserunt, pariatur
+          explicabo.
+        </p>
+      </div>
+    </header>
+    <div class="container">
+      <p class="text-item-header" style="text-transform: uppercase">
+        Your group Extractions
+      </p>
+      <div class="card-container">
+        <div class="item" id="jtbd"></div>
+        <div class="item" id="agency"></div>
+        <div class="item" id="behavior"></div>
+        <div class="item" id="sensor"></div>
+        <div class="item" id="actuator"></div>
+        <div class="item" id="brand"></div>
+      </div>
+    </div>
     <script type="module" src="./js/dashboard.js"></script>
   </body>
 </html>

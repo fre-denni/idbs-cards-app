@@ -29,3 +29,23 @@ If you are curios about the project and want to learn more, contact Federico Den
 ---
 
 ## 🇵🇸 Free Palestine 🇵🇸
+
+---
+
+##### To do
+
+- [ ] html tags
+  - [ ] fancy og tags for linkedin and socials
+  - [ ] add and update meta tags
+  - [ ] add aria-labels
+- [ ] cards
+  - [ ] add logic of shuffle to supabase table
+  - [ ] add policies that admin can reshuffle singular cards
+  - [ ] add graphics and connect graphics to display them on dashbaord and admin
+- [ ] admin
+  - [ ] add table to control groups (add/cut them, modify number of members and members)
+  - [ ] add controls to shuffle cards
+  - [ ] add access to a private dashboard to test and see (group 20)
+- [ ] dashboard
+- [ ] add text and informations (add name that user has chose)
+- [ ] add
