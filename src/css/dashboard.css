@@ -64,12 +64,10 @@
   display: none;
 }
 
-/* Singolo item della griglia */
 .item {
   cursor: pointer;
 }
 
-/* Img dentro .item */
 .item img {
   width: 100%;
   height: auto;
@@ -82,12 +80,10 @@
   will-change: transform;
 }
 
-/* Hover: sale (solo locked) */
 .item.state-locked:hover img {
   transform: translateY(-10px);
 }
 
-/* Click: scompare sotto */
 .item.is-active img {
   transform: translateY(120%);
   opacity: 0;
@@ -102,10 +98,10 @@
   opacity: 0.5;
 }
 .item.state-blocked:hover img {
-  transform: translateY(-10px); /* nessun hover */
+  transform: translateY(-10px);
 }
 
-/* ── STATO UNLOCKED: placeholder carta ── */
+/* ── STATO UNLOCKED ── */
 .item.state-unlocked {
   cursor: default;
 }
@@ -156,7 +152,6 @@
   transition: opacity 0.6s ease;
   z-index: 102;
 
-  /* Shimmer */
   background: linear-gradient(135deg, #ffffff 0%, #5e5e5e 50%, #ffffff 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -180,12 +175,12 @@
 
 /* ── PACCHETTO INGRANDITO ── */
 .packet-enlarged {
-  position: fixed;
+  position: absolute;
   left: 50%;
   top: 100%;
   transform: translateX(-50%) translateY(0);
   width: min(35rem, 90vw);
-  z-index: 101;
+  z-index: 10;
   cursor: pointer;
   transition:
     top 1.05s cubic-bezier(0.34, 1.2, 0.64, 1),
@@ -193,18 +188,30 @@
   pointer-events: none;
 }
 
+/* Posizione visibile */
 .packet-overlay.is-open .packet-enlarged {
   top: 120%;
   transform: translateX(-50%) translateY(-100%);
   pointer-events: all;
 }
 
+/* Torna giù dopo chiusura overlay */
 .packet-overlay.is-closing .packet-enlarged {
   top: 100%;
   transform: translateX(-50%) translateY(0);
   transition:
     top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dismissed: pack sparisce giù senza chiudere l'overlay */
+.packet-enlarged.is-dismissed {
+  top: 150% !important;
+  transform: translateX(-50%) translateY(0) !important;
+  pointer-events: none;
+  transition:
+    top 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* ── PACK SPLIT STRUCTURE ── */
@@ -228,7 +235,6 @@
   display: block;
 }
 
-/* Metà superiore: solo il 12% in cima */
 .pack-top {
   clip-path: polygon(0 0, 100% 0, 100% 12%, 0 12%);
   z-index: 2;
@@ -237,7 +243,6 @@
     opacity 0.9s ease-out;
 }
 
-/* Metà inferiore: dal 12% in giù */
 .pack-body {
   clip-path: polygon(0 12%, 100% 12%, 100% 100%, 0 100%);
   z-index: 1;
@@ -246,7 +251,6 @@
     opacity 0.6s ease 0.3s;
 }
 
-/* Linea di taglio superiore */
 .cut-line-top {
   position: absolute;
   top: 12%;
@@ -259,7 +263,6 @@
   transition: opacity 0.2s;
 }
 
-/* Ombra di taglio inferiore */
 .cut-line-bottom {
   position: absolute;
   top: 12%;
@@ -272,7 +275,6 @@
   transition: opacity 0.2s;
 }
 
-/* ── ANIMAZIONE APERTURA ── */
 .packet-enlarged.is-opening .pack-top {
   transform: translateY(-120px) translateX(20px) rotate(15deg);
   opacity: 0;
@@ -286,4 +288,156 @@
 .packet-enlarged.is-opening .cut-line-top,
 .packet-enlarged.is-opening .cut-line-bottom {
   opacity: 1;
+}
+
+/*
+════════════════════════════════════════
+          SUNRAYS
+════════════════════════════════════════
+*/
+
+.sunrays {
+  position: absolute;
+  width: 250%;
+  height: 250%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0) rotate(-40deg);
+  opacity: 0;
+  background: repeating-conic-gradient(
+    rgba(255, 255, 255, 0.06) 0deg 12deg,
+    transparent 12deg 24deg
+  );
+  pointer-events: none;
+  z-index: 1;
+  transition:
+    transform 1.4s cubic-bezier(0.34, 1.1, 0.64, 1),
+    opacity 0.8s ease;
+}
+
+.sunrays.is-active {
+  transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  opacity: 1;
+  animation: sunray-spin 20s linear infinite;
+}
+
+.sunrays.is-fading {
+  transform: translate(-50%, -50%) scale(1.3) rotate(20deg);
+  opacity: 0;
+  animation: none;
+  transition:
+    transform 1.8s ease-in,
+    opacity 1.2s ease;
+}
+
+@keyframes sunray-spin {
+  from {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1) rotate(360deg);
+  }
+}
+
+/*
+════════════════════════════════════════
+          CARD STAGE
+════════════════════════════════════════
+*/
+
+.card-stage {
+  position: absolute;
+  left: 50%;
+  top: 135%;
+  transform: translateX(-50%) translateY(-100%);
+  width: min(22rem, 75vw);
+  z-index: 5;
+  cursor: pointer;
+  pointer-events: none;
+  transition:
+    top 0.7s cubic-bezier(0.34, 1.1, 0.64, 1),
+    transform 0.7s cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+
+/* Carta visibile nella posizione di riposo */
+.card-stage.is-visible {
+  top: 90%;
+  transform: translateX(-50%) translateY(-100%);
+  pointer-events: all;
+}
+
+/* Carta centrata dopo click */
+.card-stage.is-centered {
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  cursor: default;
+  transition:
+    top 0.55s cubic-bezier(0.34, 1.2, 0.64, 1),
+    transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+/* Carta che torna giù */
+.card-stage.is-closing {
+  top: 150%;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: none;
+  transition:
+    top 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-stage hover-tilt {
+  display: block;
+  width: 100%;
+}
+
+.card-stage img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+}
+
+.card-container {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Gli item unlocked devono avere overflow visible
+   perché hover-tilt proietta il glare fuori dai bordi */
+.item.state-unlocked {
+  overflow: visible;
+  cursor: pointer; /* cambio: da default a pointer per indicare cliccabilità */
+}
+
+/* hover-tilt dentro la griglia */
+.item.state-unlocked hover-tilt {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+/* Immagine dentro hover-tilt nella griglia */
+.item.state-unlocked hover-tilt img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+/* ── Animazione entrata carta nella griglia ──
+   Viene aggiunta via JS dopo la chiusura dell'overlay */
+@keyframes card-enter {
+  from {
+    transform: translateY(60px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.item.card-entering hover-tilt {
+  animation: card-enter 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
