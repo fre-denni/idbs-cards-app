@@ -64,11 +64,10 @@ const cardStates = {};
 // ─── UI State machine ─────────────────────────────────────────────────────────
 // idle | pack-open | opening | card-visible | card-viewing
 let uiState = "idle";
-let activeItem = null; // item griglia con pack aperto
-let activeCardId = null; // cardId corrente nell'overlay
+let activeItem = null; // elemento griglia attivo (sia locked che unlocked)
+let activeCardId = null;
 let sunraysTimeout = null;
 let ctaTimeout = null;
-
 let groupId = null;
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
@@ -94,21 +93,22 @@ overlay.appendChild(cardStage);
 overlay.appendChild(enlarged);
 document.body.appendChild(overlay);
 
-// ─── Click: pack ingrandito → apri ───────────────────────────────────────────
+// ─── Click handlers ───────────────────────────────────────────────────────────
+
 enlarged.addEventListener("click", (e) => {
   e.stopPropagation();
   if (uiState === "pack-open") startOpeningAnimation();
 });
 
-// ─── Click: card stage → centra ──────────────────────────────────────────────
 cardStage.addEventListener("click", (e) => {
   e.stopPropagation();
-  if (uiState === "card-visible" || uiState === "card-viewing") {
+  // Solo card-viewing (carta già sbloccata) si centra al click
+  // card-visible (appena sbloccata) NON si centra
+  if (uiState === "card-viewing") {
     cardStage.classList.add("is-centered");
   }
 });
 
-// ─── Click: overlay (fuori) → chiudi ─────────────────────────────────────────
 overlay.addEventListener("click", (e) => {
   if (uiState === "opening") return;
   if (enlarged.contains(e.target)) return;
@@ -178,6 +178,7 @@ function renderCardState(id, withEntryAnimation = false) {
     "state-locked",
     "state-unlocked",
     "is-active",
+    "is-slot-empty",
     "card-entering",
   );
   el.classList.add(`state-${state}`);
@@ -207,11 +208,12 @@ function renderCardState(id, withEntryAnimation = false) {
 
 function buildHoverTilt(src, alt = "card") {
   const tilt = document.createElement("hover-tilt");
-  tilt.setAttribute("glare-intensity", "2.5");
+  tilt.setAttribute("glare-intensity", "2");
   tilt.setAttribute("scale-factor", "1.02");
   tilt.setAttribute("shadow", "");
   tilt.setAttribute("glare-hue", "210");
   tilt.setAttribute("tilt-factor", "1.5");
+  tilt.classList.add("card-tilt");
   const img = document.createElement("img");
   img.src = src;
   img.alt = alt;
@@ -219,20 +221,18 @@ function buildHoverTilt(src, alt = "card") {
   return tilt;
 }
 
-// ─── Listener click sulla griglia ────────────────────────────────────────────
+// ─── Listener sulla griglia ───────────────────────────────────────────────────
 function attachItemListeners() {
   for (const id of Object.keys(PACKETS)) {
     const el = document.getElementById(id);
     if (!el) continue;
     el.addEventListener("click", () => {
-      // Blocca qualsiasi interazione se l'overlay è occupato
       if (uiState !== "idle") return;
-
       const state = cardStates[id];
       if (state === "locked") {
         openPacket(el);
       } else if (state === "unlocked") {
-        openUnlockedCard(id);
+        openUnlockedCard(id, el);
       }
     });
   }
@@ -245,8 +245,18 @@ function openPacket(item) {
   activeCardId = item.id;
   item.classList.add("is-active");
 
+  // BUG 1 FIX: disabilita transizioni, porta enlarged fuori schermo
+  // istantaneamente, poi riabilita — evita race condition con is-dismissed
+  enlarged.style.transition = "none";
+  enlarged.classList.remove("is-dismissed", "is-opening");
+  enlarged.style.top = "100%";
+  enlarged.style.transform = "translateX(-50%) translateY(0)";
   enlarged.innerHTML = "";
-  enlarged.classList.remove("is-dismissed");
+  enlarged.getBoundingClientRect(); // forza reflow
+  enlarged.style.transition = "";
+  enlarged.style.top = "";
+  enlarged.style.transform = "";
+
   enlarged.dataset.cardId = item.id;
   enlarged.innerHTML = `
     <div class="pack-wrapper">
@@ -275,16 +285,20 @@ function openPacket(item) {
 }
 
 // ─── Apri carta già sbloccata ─────────────────────────────────────────────────
-function openUnlockedCard(id) {
+function openUnlockedCard(id, el) {
   const src = unlockedCardSrc[id];
   if (!src) return;
 
   uiState = "card-viewing";
   activeCardId = id;
+  activeItem = el;
 
-  // Enlarged vuoto e fuori schermo
+  el.classList.add("is-slot-empty");
+
+  // BUG 2 FIX: nasconde enlarged completamente senza transizioni,
+  // così non appare nemmeno per un frame prima di scendere
   enlarged.innerHTML = "";
-  enlarged.classList.add("is-dismissed");
+  enlarged.style.display = "none";
 
   overlay.classList.remove("is-closing");
   overlay.getBoundingClientRect();
@@ -292,7 +306,7 @@ function openUnlockedCard(id) {
 
   showCard(src);
 
-  // Due rAF per assicurarsi che is-visible sia applicato prima di is-centered
+  // Centra subito per card-viewing
   requestAnimationFrame(() =>
     requestAnimationFrame(() => {
       cardStage.classList.add("is-centered");
@@ -325,25 +339,19 @@ async function startOpeningAnimation() {
   enlarged.classList.add("is-dismissed");
   enlarged.classList.remove("is-opening");
 
-  // 5. Sunrays timer da adesso
+  // 5. Sunrays timer
   clearTimeout(sunraysTimeout);
   sunraysTimeout = setTimeout(() => {
     sunrays.classList.remove("is-active");
     sunrays.classList.add("is-fading");
   }, 6000);
 
-  // 6. DB + stato locale
+  // 6. DB + stato
   await unlockCard(cardId);
   cardStates[cardId] = "unlocked";
 
-  // 7. Ripristina item griglia (solo visivamente: la card unlocked verrà
-  //    renderizzata dopo closeAll, per ora torna allo stato neutro)
-  if (activeItem) {
-    activeItem.classList.remove("is-active");
-    activeItem = null;
-  }
-
-  // 8. Ora la carta è visibile, aspetta il click dell'utente per chiudere
+  // 7. Lo slot rimane nascosto (is-active ancora su activeItem)
+  //    closeAll gestirà il render quando l'utente clicca fuori
   uiState = "card-visible";
 }
 
@@ -378,17 +386,16 @@ function closeAll() {
   ctaText.classList.remove("is-visible");
   deactivateSunrays();
 
-  // Cattura l'id da rendere PRIMA di resettare lo stato
-  const cardToRender = uiState === "card-visible" ? activeCardId : null;
+  // Determina cosa fare allo slot dopo la chiusura
+  const wasJustUnlocked = uiState === "card-visible";
+  const cardToRender = wasJustUnlocked ? activeCardId : null;
+  const itemToRestore = activeItem;
 
   uiState = "idle";
   activeCardId = null;
-  if (activeItem) {
-    activeItem.classList.remove("is-active");
-    activeItem = null;
-  }
+  activeItem = null;
 
-  // Chiudi card stage
+  // Chiudi card stage, poi aggiorna slot
   cardStage.classList.remove("is-visible", "is-centered");
   if (cardStage.innerHTML !== "") {
     cardStage.classList.add("is-closing");
@@ -396,11 +403,18 @@ function closeAll() {
       cardStage.classList.remove("is-closing");
       cardStage.innerHTML = "";
       cardStage.removeEventListener("transitionend", onCardEnd);
-      if (cardToRender) renderCardState(cardToRender, true);
+
+      if (cardToRender) {
+        // Appena sbloccata: mostra carta nello slot con animazione
+        renderCardState(cardToRender, true);
+      } else if (itemToRestore) {
+        // Carta già sbloccata: rimuovi is-slot-empty
+        itemToRestore.classList.remove("is-slot-empty");
+      }
     };
     cardStage.addEventListener("transitionend", onCardEnd);
   } else {
-    if (cardToRender) renderCardState(cardToRender, true);
+    if (itemToRestore) itemToRestore.classList.remove("is-slot-empty");
   }
 
   // Chiudi overlay
@@ -409,6 +423,7 @@ function closeAll() {
   const onOverlayEnd = () => {
     overlay.classList.remove("is-closing");
     enlarged.classList.remove("is-opening", "is-dismissed");
+    enlarged.style.display = ""; // ripristina display dopo card-viewing
     enlarged.innerHTML = "";
     sunrays.classList.remove("is-fading");
     overlay.removeEventListener("transitionend", onOverlayEnd);

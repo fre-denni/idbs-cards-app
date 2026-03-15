@@ -44,18 +44,18 @@
 
 /*
 -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
-                CARDS
+                CARDS GRID
 -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 */
 .card-container {
   display: grid;
-  padding: 2rem 0;
+  padding: 1.5rem 0;
   row-gap: 0.625rem;
   column-gap: 24px;
   align-self: stretch;
   grid-template-rows: 1fr;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  overflow-x: auto;
+  overflow-x: visible;
   overflow-y: visible;
   scrollbar-width: none;
 }
@@ -64,8 +64,10 @@
   display: none;
 }
 
+/* ── Item base ── */
 .item {
   cursor: pointer;
+  overflow: visible; /* necessario per hover-tilt glare */
 }
 
 .item img {
@@ -80,10 +82,12 @@
   will-change: transform;
 }
 
+/* ── LOCKED: hover sale ── */
 .item.state-locked:hover img {
   transform: translateY(-10px);
 }
 
+/* ── LOCKED: click → pack sparisce sotto ── */
 .item.is-active img {
   transform: translateY(120%);
   opacity: 0;
@@ -92,7 +96,7 @@
     opacity 0.3s ease;
 }
 
-/* ── STATO BLOCKED ── */
+/* ── BLOCKED ── */
 .item.state-blocked {
   cursor: not-allowed;
   opacity: 0.5;
@@ -101,21 +105,49 @@
   transform: translateY(-10px);
 }
 
-/* ── STATO UNLOCKED ── */
+/* ── UNLOCKED ── */
 .item.state-unlocked {
-  cursor: default;
-}
-.item.state-unlocked:hover img {
-  transform: translateY(0);
+  cursor: pointer;
+  overflow: visible;
 }
 
-.card-placeholder {
+/* Nasconde lo slot mentre la carta è enlarged (card-viewing) */
+.item.is-slot-empty {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.item.state-unlocked .card-tilt::part(container) {
+  border-radius: 12px;
+}
+
+.item.state-unlocked .card-tilt img {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.item.state-unlocked .card-tilt img {
   width: 100%;
-  aspect-ratio: 2 / 3;
-  background: #2a2a2a;
-  border-radius: 8px;
-  border: 1px solid #444;
+  height: auto;
   display: block;
+  border-radius: 12px;
+}
+
+/* ── Animazione entrata carta nella griglia ── */
+@keyframes card-enter {
+  from {
+    transform: translateY(60px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.item.card-entering .card-tilt {
+  animation: card-enter 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /*
@@ -151,7 +183,6 @@
   pointer-events: none;
   transition: opacity 0.6s ease;
   z-index: 102;
-
   background: linear-gradient(135deg, #ffffff 0%, #5e5e5e 50%, #ffffff 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -188,14 +219,12 @@
   pointer-events: none;
 }
 
-/* Posizione visibile */
 .packet-overlay.is-open .packet-enlarged {
   top: 120%;
   transform: translateX(-50%) translateY(-100%);
   pointer-events: all;
 }
 
-/* Torna giù dopo chiusura overlay */
 .packet-overlay.is-closing .packet-enlarged {
   top: 100%;
   transform: translateX(-50%) translateY(0);
@@ -204,7 +233,6 @@
     transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dismissed: pack sparisce giù senza chiudere l'overlay */
 .packet-enlarged.is-dismissed {
   top: 150% !important;
   transform: translateX(-50%) translateY(0) !important;
@@ -279,12 +307,10 @@
   transform: translateY(-120px) translateX(20px) rotate(15deg);
   opacity: 0;
 }
-
 .packet-enlarged.is-opening .pack-body {
   transform: translateY(80px);
   opacity: 0;
 }
-
 .packet-enlarged.is-opening .cut-line-top,
 .packet-enlarged.is-opening .cut-line-bottom {
   opacity: 1;
@@ -350,7 +376,8 @@
   left: 50%;
   top: 135%;
   transform: translateX(-50%) translateY(-100%);
-  width: min(22rem, 75vw);
+  /* Carta più grande per migliorare la leggibilità */
+  width: min(28rem, 88vw);
   z-index: 5;
   cursor: pointer;
   pointer-events: none;
@@ -359,14 +386,12 @@
     transform 0.7s cubic-bezier(0.34, 1.1, 0.64, 1);
 }
 
-/* Carta visibile nella posizione di riposo */
 .card-stage.is-visible {
   top: 90%;
   transform: translateX(-50%) translateY(-100%);
   pointer-events: all;
 }
 
-/* Carta centrata dopo click */
 .card-stage.is-centered {
   top: 50%;
   transform: translateX(-50%) translateY(-50%);
@@ -376,7 +401,6 @@
     transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
-/* Carta che torna giù */
 .card-stage.is-closing {
   top: 150%;
   transform: translateX(-50%) translateY(0);
@@ -386,58 +410,24 @@
     transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-stage hover-tilt {
+/* hover-tilt nel card-stage: fix border-radius con ::part(container) */
+.card-stage .card-tilt {
   display: block;
   width: 100%;
 }
 
-.card-stage img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 10px;
+.card-stage .card-tilt::part(container) {
+  border-radius: 20px;
 }
 
-.card-container {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
+.card-stage .card-tilt img {
+  border-radius: 20px;
+  overflow: hidden;
 }
 
-/* Gli item unlocked devono avere overflow visible
-   perché hover-tilt proietta il glare fuori dai bordi */
-.item.state-unlocked {
-  overflow: visible;
-  cursor: pointer;
-}
-
-/* hover-tilt dentro la griglia */
-.item.state-unlocked hover-tilt {
-  display: block;
-  width: 100%;
-  overflow: visible;
-}
-
-/* Immagine dentro hover-tilt nella griglia */
-.item.state-unlocked hover-tilt img {
+.card-stage .card-tilt img {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 8px;
-}
-
-/* ── Animazione entrata carta nella griglia ──
-   Viene aggiunta via JS dopo la chiusura dell'overlay */
-@keyframes card-enter {
-  from {
-    transform: translateY(60px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.item.card-entering hover-tilt {
-  animation: card-enter 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  border-radius: 20px;
 }
