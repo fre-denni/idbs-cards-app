@@ -433,15 +433,22 @@ function closeAll() {
 // ─── Segna carta come unlocked nel DB ─────────────────────────────────────────
 async function unlockCard(cardId) {
   if (!groupId) return;
+
+  // 1. Leggi unlocked attuale
   const { data } = await supabase
     .from("group_cards")
     .select("unlocked")
     .eq("group_id", groupId)
     .maybeSingle();
+
+  // 2. Aggiorna solo il campo unlocked (no upsert, no tocco ad altri campi)
   const updated = { ...(data?.unlocked || {}), [cardId]: true };
-  await supabase
+  const { error } = await supabase
     .from("group_cards")
-    .upsert({ group_id: groupId, unlocked: updated });
+    .update({ unlocked: updated })
+    .eq("group_id", groupId);
+
+  if (error) console.error("unlockCard error:", error);
 }
 
 // ─── [EASTER EGG] Tasto R: reset unlocked → locked (assigned rimane) ─────────
