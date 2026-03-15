@@ -3,19 +3,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="The card-sorting tool from the Interaction Basics course of Politecnico di Milano, bachelor's of Digital Interaction Design. Designed by Federico Denni" />
-    <title>IDBS Cards</title>
+    <title>IDBS Admin</title>
     <link rel="stylesheet" href="./css/main.css" />
+    <link rel="stylesheet" href="./css/admin.css" />
   </head>
   <body>
-    <header>
-      <p class="text-logo-header">IDBS</p>
-      <p class="text-item-header">Interaction Design Basics</p>
-      <h1>Admin</h1>
+    <header class="admin-header">
+      <div class="admin-header-left">
+        <p class="text-logo-header">IDBS — Admin</p>
+      </div>
+      <div class="admin-header-right">
+        <a href="/dashboard.html" class="btn-link text-small-body">
+          My Dashboard
+        </a>
+        <button id="logoutBtn" class="btn-sm">Logout</button>
+      </div>
     </header>
-    <button id="logoutArr">Logout</button>
+
+    <main class="admin-main">
+      <!-- ── CARD ASSIGNMENTS ─────────────────────────────── -->
+      <section class="admin-section">
+        <div class="section-header">
+          <h2 class="text-item-header">Card Assignments</h2>
+          <div class="section-actions">
+            <button id="btn-rand-all" class="btn-action">
+              🎲 Randomize ALL
+            </button>
+          </div>
+        </div>
+        <p id="table-status" class="status-msg text-small-body"></p>
+        <div class="table-wrapper">
+          <table id="cards-table">
+            <thead id="cards-thead"></thead>
+            <tbody id="cards-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── GROUPS MANAGEMENT ────────────────────────────── -->
+      <section class="admin-section">
+        <div class="section-header">
+          <h2 class="text-item-header">Groups Management</h2>
+          <button id="btn-add-group-open" class="btn-action">
+            + New Group
+          </button>
+        </div>
+
+        <!-- Add group form (hidden by default) -->
+        <div id="add-group-form" class="add-form hidden">
+          <input
+            type="number"
+            id="new-group-number"
+            class="text-small-body"
+            placeholder="Group number (e.g. 21)" />
+          <button id="btn-add-group" class="btn-sm">Create Group</button>
+          <button id="btn-add-group-cancel" class="btn-sm btn-ghost">
+            Cancel
+          </button>
+          <p id="add-group-error" class="error-msg text-small-body"></p>
+        </div>
+
+        <div id="groups-list"></div>
+      </section>
+    </main>
+
     <script type="module" src="./js/admin.js"></script>
   </body>
 </html>

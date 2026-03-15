@@ -1,0 +1,516 @@
+/* ─── Layout ─────────────────────────────────────────────── */
+
+body {
+  flex-direction: column;
+  align-items: stretch;
+  padding-bottom: 4rem;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 2rem;
+  border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+  background: var(--black);
+  z-index: 10;
+}
+
+.admin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  padding: 2rem 2rem;
+  max-width: 100%;
+}
+
+/* ─── Sections ───────────────────────────────────────────── */
+
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.section-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ─── Buttons ────────────────────────────────────────────── */
+
+.btn-action {
+  padding: 0.4rem 0.9rem;
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 0.875rem;
+  border: 1px solid var(--white);
+  background: transparent;
+  color: var(--white);
+  cursor: pointer;
+  border-radius: 4px;
+  width: auto;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.btn-action:hover {
+  background: var(--white);
+  color: var(--black);
+}
+
+.btn-sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  border: 1px solid #666;
+  background: transparent;
+  color: var(--white);
+  cursor: pointer;
+  border-radius: 4px;
+  width: auto;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btn-sm:hover {
+  background: var(--white);
+  color: var(--black);
+}
+
+.btn-ghost {
+  border-color: #444;
+  color: #888;
+}
+
+.btn-ghost:hover {
+  border-color: #888;
+  color: var(--white);
+  background: transparent;
+}
+
+.btn-link {
+  color: var(--secondary-gray);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.btn-link:hover {
+  color: var(--white);
+}
+
+.btn-icon {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  border: 1px solid #444;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  border-radius: 3px;
+  width: auto;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btn-icon:hover {
+  border-color: var(--white);
+  color: var(--black);
+}
+
+.btn-danger {
+  border-color: #a33;
+  color: #e55;
+}
+.btn-danger:hover {
+  background: #a33;
+  color: var(--white);
+  border-color: #a33;
+}
+
+/* ─── Table ──────────────────────────────────────────────── */
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+#cards-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-family: "Instrument Sans", sans-serif;
+}
+
+#cards-table th,
+#cards-table td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #222;
+  border-right: 1px solid #222;
+  vertical-align: top;
+  text-align: left;
+}
+
+#cards-table th:last-child,
+#cards-table td:last-child {
+  border-right: none;
+}
+
+#cards-table tr:last-child td {
+  border-bottom: none;
+}
+
+#cards-table thead tr:first-child th {
+  background: #111;
+  color: var(--secondary-gray);
+  font-family: "Departure Mono";
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* Sub-header row (actions per column) */
+#cards-table thead tr:last-child th {
+  background: #0a0a0a;
+  padding: 0.4rem 0.8rem;
+}
+
+#cards-table tbody tr:hover td {
+  background: #080808;
+}
+
+.col-group {
+  width: 60px;
+}
+.col-students {
+  width: 200px;
+}
+.col-card {
+  width: 140px;
+}
+.col-actions {
+  width: 100px;
+}
+
+/* Card cell */
+.card-cell-name {
+  font-family: "Departure Mono";
+  font-size: 0.75rem;
+  margin-bottom: 0.4rem;
+  color: var(--white);
+  word-break: break-word;
+}
+
+.card-cell-name.not-assigned {
+  color: #555;
+  font-style: italic;
+}
+
+.card-cell-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #888;
+  user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--white);
+}
+
+.toggle-label.is-locked {
+  color: var(--white);
+}
+
+/* Column action row */
+.col-actions-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
+}
+
+/* Students list */
+.student-entry {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #ccc;
+}
+
+.student-entry span.email {
+  color: #666;
+  font-size: 0.7rem;
+}
+
+/* Status messages */
+.status-msg {
+  color: var(--secondary-gray);
+  min-height: 1.2rem;
+}
+
+.error-msg {
+  color: #e55;
+  min-height: 1.2rem;
+}
+
+/* ─── Groups Manager ─────────────────────────────────────── */
+
+.add-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.75rem;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.add-form input {
+  width: 160px;
+  padding: 0.35rem 0.6rem;
+  background: var(--black);
+  border: 1px solid #555;
+  color: var(--white);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.add-form input:focus {
+  outline: none;
+  border-color: var(--white);
+}
+
+#groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.group-card {
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  background: #050505;
+}
+
+.group-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.group-card-title {
+  font-family: "Departure Mono";
+  font-size: 0.9rem;
+  color: var(--white);
+}
+
+.students-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.student-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #bbb;
+}
+
+.student-row .name {
+  color: var(--white);
+}
+.student-row .email {
+  color: #666;
+  font-size: 0.72rem;
+}
+
+.add-student-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.add-student-form input {
+  width: 220px;
+  padding: 0.3rem 0.6rem;
+  background: var(--black);
+  border: 1px solid #444;
+  color: var(--white);
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.add-student-form input:focus {
+  outline: none;
+  border-color: var(--white);
+}
+
+.group-error {
+  color: #e55;
+  font-size: 0.75rem;
+}
+
+/* ─── Utility ────────────────────────────────────────────── */
+
+.hidden {
+  display: none !important;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  font-family: "Departure Mono";
+  color: var(--white);
+  font-size: 1rem;
+}
+
+/* Groups list: 4 colonne */
+#groups-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Fallback per schermi stretti */
+@media (max-width: 1100px) {
+  #groups-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  #groups-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form aggiunta studente: due input affiancati */
+.add-student-form input {
+  width: 160px;
+}
+
+/* Tag stato carta nella tabella (sostituisce il toggle per cella) */
+.card-state-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-family: "Departure Mono";
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tag-locked {
+  background: #1a2a1a;
+  color: #6ec96e;
+  border: 1px solid #2e4a2e;
+}
+
+.tag-blocked {
+  background: #1a1a1a;
+  color: #666;
+  border: 1px solid #333;
+}
+
+/* ── Da aggiungere in fondo all'admin.css esistente ── */
+
+/* Groups list: 4 colonne */
+#groups-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Fallback per schermi stretti */
+@media (max-width: 1100px) {
+  #groups-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  #groups-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form aggiunta studente: due input affiancati */
+.add-student-form input {
+  width: 160px;
+}
+
+/* Tag stato carta nella tabella (sostituisce il toggle per cella) */
+.card-state-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-family: "Departure Mono";
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tag-unlocked {
+  background: #1a2a1a;
+  color: #6ec96e;
+  border: 1px solid #2e4a2e;
+}
+
+.tag-locked {
+  background: #2a2200;
+  color: #c9b84e;
+  border: 1px solid #4a3e00;
+}
+
+.tag-blocked {
+  background: #1a1a1a;
+  color: #666;
+  border: 1px solid #333;
+}

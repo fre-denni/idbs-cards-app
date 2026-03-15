@@ -1,51 +1,20 @@
 import { requireAuth } from "./sessionGuard.js";
 import { supabase } from "./supabaseClient.js";
 
-// ─── Card pools per categoria ─────────────────────────────────────────────────
-const CARD_POOLS = {
-  jtbd: [
-    "/cards/jobs/community.webp",
-    "/cards/jobs/discovery.webp",
-    "/cards/jobs/filtering.webp",
-    "/cards/jobs/interactive.webp",
-    "/cards/jobs/zapping.webp",
-  ],
-  agency: [
-    "/cards/jobs/community.webp",
-    "/cards/jobs/discovery.webp",
-    "/cards/jobs/filtering.webp",
-    "/cards/jobs/interactive.webp",
-    "/cards/jobs/zapping.webp",
-  ],
-  behavior: [
-    "/cards/jobs/community.webp",
-    "/cards/jobs/discovery.webp",
-    "/cards/jobs/filtering.webp",
-    "/cards/jobs/interactive.webp",
-    "/cards/jobs/zapping.webp",
-  ],
-  sensor: [
-    "/cards/jobs/community.webp",
-    "/cards/jobs/discovery.webp",
-    "/cards/jobs/filtering.webp",
-    "/cards/jobs/interactive.webp",
-    "/cards/jobs/zapping.webp",
-  ],
-  actuator: [
-    "/cards/jobs/community.webp",
-    "/cards/jobs/discovery.webp",
-    "/cards/jobs/filtering.webp",
-    "/cards/jobs/interactive.webp",
-    "/cards/jobs/zapping.webp",
-  ],
-  brand: [
-    "/cards/jobs/community.webp",
-    "/cards/jobs/discovery.webp",
-    "/cards/jobs/filtering.webp",
-    "/cards/jobs/interactive.webp",
-    "/cards/jobs/zapping.webp",
-  ],
+// ─── Mapping tipo carta → cartella asset ──────────────────────────────────────
+// Per aggiornare i path: modifica solo questo oggetto
+const CARD_FOLDER = {
+  jtbd: "jobs",
+  agency: "agency",
+  behavior: "behavior",
+  sensor: "sensors",
+  actuator: "actuators",
+  brand: "brands",
 };
+
+function cardSrc(type, name) {
+  return `/cards/${CARD_FOLDER[type]}/${name}.webp`;
+}
 
 const PACKETS = {
   jtbd: "/assets/packets/jtbd.webp",
@@ -56,15 +25,14 @@ const PACKETS = {
   brand: "/assets/packets/brands.webp",
 };
 
-const INITIALLY_BLOCKED = new Set(["behavior", "sensor", "actuator", "brand"]);
-
-const unlockedCardSrc = {};
+// assignedCardSrc: cardId → src del file .webp assegnato dal DB
+const assignedCardSrc = {};
 const cardStates = {};
 
 // ─── UI State machine ─────────────────────────────────────────────────────────
 // idle | pack-open | opening | card-visible | card-viewing
 let uiState = "idle";
-let activeItem = null; // elemento griglia attivo (sia locked che unlocked)
+let activeItem = null;
 let activeCardId = null;
 let sunraysTimeout = null;
 let ctaTimeout = null;
@@ -102,11 +70,7 @@ enlarged.addEventListener("click", (e) => {
 
 cardStage.addEventListener("click", (e) => {
   e.stopPropagation();
-  // Solo card-viewing (carta già sbloccata) si centra al click
-  // card-visible (appena sbloccata) NON si centra
-  if (uiState === "card-viewing") {
-    cardStage.classList.add("is-centered");
-  }
+  if (uiState === "card-viewing") cardStage.classList.add("is-centered");
 });
 
 overlay.addEventListener("click", (e) => {
@@ -123,6 +87,15 @@ async function initDashboard() {
 
   document.getElementById("userName").innerText = student.name ?? "Stranger";
 
+  // Bottone back: testo e comportamento diversi per admin vs studente
+  const backBtn = document.getElementById("logoutArr");
+  if (student.role === "admin") {
+    backBtn.innerHTML = "&larr; GO-BACK";
+    backBtn.dataset.isAdmin = "true";
+  } else {
+    backBtn.dataset.isAdmin = "false";
+  }
+
   if (student.group_id) {
     groupId = student.group_id;
     const { data: group } = await supabase
@@ -133,32 +106,41 @@ async function initDashboard() {
     document.getElementById("groupName").innerText = group?.group_number ?? "—";
     await loadCardStates();
   } else {
-    for (const id of Object.keys(PACKETS)) {
-      cardStates[id] = INITIALLY_BLOCKED.has(id) ? "blocked" : "locked";
-    }
+    // Nessun gruppo: tutto blocked di default
+    for (const id of Object.keys(PACKETS)) cardStates[id] = "blocked";
   }
 
   renderAllCards();
   attachItemListeners();
 }
 
-// ─── Carica stati dal DB ──────────────────────────────────────────────────────
+// ─── Carica stati + carte assegnate dal DB ────────────────────────────────────
 async function loadCardStates() {
   const { data } = await supabase
     .from("group_cards")
-    .select("unlocked")
+    .select("assigned_cards, unlocked, lock_status")
     .eq("group_id", groupId)
     .maybeSingle();
 
-  const unlockedInDB = data?.unlocked || {};
+  const assigned = data?.assigned_cards || {};
+  const unlocked = data?.unlocked || {};
+  const lockStatus = data?.lock_status || {};
+
   for (const id of Object.keys(PACKETS)) {
-    if (INITIALLY_BLOCKED.has(id)) {
+    const status = lockStatus[id] ?? "blocked"; // default: blocked
+    const isOpen = unlocked[id] === true;
+
+    if (status === "blocked") {
       cardStates[id] = "blocked";
-    } else if (unlockedInDB[id]) {
+    } else if (isOpen) {
       cardStates[id] = "unlocked";
-      if (!unlockedCardSrc[id]) unlockedCardSrc[id] = pickCard(id);
     } else {
       cardStates[id] = "locked";
+    }
+
+    // Imposta il src dalla carta assegnata nel DB
+    if (assigned[id]) {
+      assignedCardSrc[id] = cardSrc(id, assigned[id]);
     }
   }
 }
@@ -172,20 +154,21 @@ function renderCardState(id, withEntryAnimation = false) {
   const el = document.getElementById(id);
   if (!el) return;
 
-  const state = cardStates[id] ?? "locked";
+  const state = cardStates[id] ?? "blocked";
   el.classList.remove(
     "state-blocked",
     "state-locked",
     "state-unlocked",
     "is-active",
     "is-slot-empty",
+    "is-departing",
     "card-entering",
   );
   el.classList.add(`state-${state}`);
   el.innerHTML = "";
 
   if (state === "unlocked") {
-    const src = unlockedCardSrc[id];
+    const src = assignedCardSrc[id];
     if (src) {
       el.appendChild(buildHoverTilt(src, id));
       if (withEntryAnimation) {
@@ -229,11 +212,8 @@ function attachItemListeners() {
     el.addEventListener("click", () => {
       if (uiState !== "idle") return;
       const state = cardStates[id];
-      if (state === "locked") {
-        openPacket(el);
-      } else if (state === "unlocked") {
-        openUnlockedCard(id, el);
-      }
+      if (state === "locked") openPacket(el);
+      if (state === "unlocked") openUnlockedCard(id, el);
     });
   }
 }
@@ -245,14 +225,14 @@ function openPacket(item) {
   activeCardId = item.id;
   item.classList.add("is-active");
 
-  // BUG 1 FIX: disabilita transizioni, porta enlarged fuori schermo
-  // istantaneamente, poi riabilita — evita race condition con is-dismissed
+  // Reset enlarged senza transizioni per evitare race condition
   enlarged.style.transition = "none";
   enlarged.classList.remove("is-dismissed", "is-opening");
+  enlarged.style.display = ""; // ripristina se era hidden da openUnlockedCard
   enlarged.style.top = "100%";
   enlarged.style.transform = "translateX(-50%) translateY(0)";
   enlarged.innerHTML = "";
-  enlarged.getBoundingClientRect(); // forza reflow
+  enlarged.getBoundingClientRect();
   enlarged.style.transition = "";
   enlarged.style.top = "";
   enlarged.style.transform = "";
@@ -284,34 +264,38 @@ function openPacket(item) {
   }, 1200);
 }
 
-// ─── Apri carta già sbloccata ─────────────────────────────────────────────────
+// ─── Apri carta già sbloccata (slide-down → centrata) ─────────────────────────
 function openUnlockedCard(id, el) {
-  const src = unlockedCardSrc[id];
+  const src = assignedCardSrc[id];
   if (!src) return;
 
   uiState = "card-viewing";
   activeCardId = id;
   activeItem = el;
 
-  el.classList.add("is-slot-empty");
+  // Fase 1: la carta nella griglia scende verso il basso
+  el.classList.add("is-departing");
 
-  // BUG 2 FIX: nasconde enlarged completamente senza transizioni,
-  // così non appare nemmeno per un frame prima di scendere
-  enlarged.innerHTML = "";
-  enlarged.style.display = "none";
+  // Fase 2: dopo la slide-down, apri l'overlay con la carta già centrata
+  setTimeout(() => {
+    el.classList.add("is-slot-empty");
 
-  overlay.classList.remove("is-closing");
-  overlay.getBoundingClientRect();
-  overlay.classList.add("is-open");
+    enlarged.innerHTML = "";
+    enlarged.style.display = "none";
 
-  showCard(src);
+    overlay.classList.remove("is-closing");
+    overlay.getBoundingClientRect();
+    overlay.classList.add("is-open");
 
-  // Centra subito per card-viewing
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      cardStage.classList.add("is-centered");
-    }),
-  );
+    showCard(src);
+
+    // Va direttamente al centro (salta la posizione "riposo")
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        cardStage.classList.add("is-centered");
+      }),
+    );
+  }, 350);
 }
 
 // ─── Animazione apertura pack ─────────────────────────────────────────────────
@@ -322,15 +306,20 @@ async function startOpeningAnimation() {
   ctaText.classList.remove("is-visible");
 
   const cardId = activeCardId;
-  const cardSrc = pickCard(cardId);
-  unlockedCardSrc[cardId] = cardSrc;
+  const src = assignedCardSrc[cardId];
 
-  // 1. Split
+  if (!src) {
+    // Carta non ancora assegnata nel DB: impossibile aprire
+    uiState = "pack-open";
+    return;
+  }
+
+  // 1. Split del pack
   enlarged.getBoundingClientRect();
   enlarged.classList.add("is-opening");
 
   // 2. Carta sale da sotto
-  setTimeout(() => showCard(cardSrc), 300);
+  setTimeout(() => showCard(src), 300);
 
   // 3. Attendi fine split
   await new Promise((r) => setTimeout(r, 950));
@@ -339,19 +328,19 @@ async function startOpeningAnimation() {
   enlarged.classList.add("is-dismissed");
   enlarged.classList.remove("is-opening");
 
-  // 5. Sunrays timer
+  // 5. Timer sunrays da adesso
   clearTimeout(sunraysTimeout);
   sunraysTimeout = setTimeout(() => {
     sunrays.classList.remove("is-active");
     sunrays.classList.add("is-fading");
   }, 6000);
 
-  // 6. DB + stato
+  // 6. DB: segna come unlocked
   await unlockCard(cardId);
   cardStates[cardId] = "unlocked";
+  // NON rimuovere is-active qui: lo slot deve restare nascosto finché
+  // l'utente non clicca fuori e closeAll chiama renderCardState
 
-  // 7. Lo slot rimane nascosto (is-active ancora su activeItem)
-  //    closeAll gestirà il render quando l'utente clicca fuori
   uiState = "card-visible";
 }
 
@@ -386,16 +375,17 @@ function closeAll() {
   ctaText.classList.remove("is-visible");
   deactivateSunrays();
 
-  // Determina cosa fare allo slot dopo la chiusura
   const wasJustUnlocked = uiState === "card-visible";
+  const wasViewing = uiState === "card-viewing";
   const cardToRender = wasJustUnlocked ? activeCardId : null;
+  const viewingCardId = wasViewing ? activeCardId : null;
   const itemToRestore = activeItem;
 
   uiState = "idle";
   activeCardId = null;
   activeItem = null;
 
-  // Chiudi card stage, poi aggiorna slot
+  // Chiudi card stage
   cardStage.classList.remove("is-visible", "is-centered");
   if (cardStage.innerHTML !== "") {
     cardStage.classList.add("is-closing");
@@ -405,16 +395,17 @@ function closeAll() {
       cardStage.removeEventListener("transitionend", onCardEnd);
 
       if (cardToRender) {
-        // Appena sbloccata: mostra carta nello slot con animazione
+        // Appena sbloccata: mostra carta nello slot con animazione di entrata
         renderCardState(cardToRender, true);
-      } else if (itemToRestore) {
-        // Carta già sbloccata: rimuovi is-slot-empty
-        itemToRestore.classList.remove("is-slot-empty");
+      } else if (viewingCardId) {
+        // Carta già sbloccata: ricostruisce lo slot pulito senza animazione
+        renderCardState(viewingCardId, false);
       }
     };
     cardStage.addEventListener("transitionend", onCardEnd);
   } else {
-    if (itemToRestore) itemToRestore.classList.remove("is-slot-empty");
+    if (itemToRestore)
+      itemToRestore.classList.remove("is-slot-empty", "is-departing");
   }
 
   // Chiudi overlay
@@ -423,15 +414,19 @@ function closeAll() {
   const onOverlayEnd = () => {
     overlay.classList.remove("is-closing");
     enlarged.classList.remove("is-opening", "is-dismissed");
-    enlarged.style.display = ""; // ripristina display dopo card-viewing
+    enlarged.style.display = "";
     enlarged.innerHTML = "";
     sunrays.classList.remove("is-fading");
+    // Rimuovi is-active dopo che l'overlay è chiuso
+    if (itemToRestore && wasJustUnlocked) {
+      itemToRestore.classList.remove("is-active");
+    }
     overlay.removeEventListener("transitionend", onOverlayEnd);
   };
   overlay.addEventListener("transitionend", onOverlayEnd);
 }
 
-// ─── DB ───────────────────────────────────────────────────────────────────────
+// ─── Segna carta come unlocked nel DB ─────────────────────────────────────────
 async function unlockCard(cardId) {
   if (!groupId) return;
   const { data } = await supabase
@@ -445,36 +440,42 @@ async function unlockCard(cardId) {
     .upsert({ group_id: groupId, unlocked: updated });
 }
 
-function pickCard(cardId) {
-  const pool = CARD_POOLS[cardId] ?? CARD_POOLS.jtbd;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-// ─── [TEST] R: reset ──────────────────────────────────────────────────────────
+// ─── [EASTER EGG] Tasto R: reset unlocked → locked (assigned rimane) ─────────
 document.addEventListener("keydown", async (e) => {
   if (e.key !== "r" && e.key !== "R") return;
   if (uiState === "opening") return;
 
   closeAll();
 
+  // Reset locale: unlocked → locked (blocked rimane blocked)
   for (const id of Object.keys(PACKETS)) {
-    if (cardStates[id] === "blocked") continue;
-    cardStates[id] = "locked";
-    delete unlockedCardSrc[id];
+    if (cardStates[id] === "unlocked") cardStates[id] = "locked";
   }
   renderAllCards();
 
+  // Reset DB: solo il campo unlocked, assigned_cards e lock_status invariati
   if (groupId) {
-    await supabase
-      .from("group_cards")
-      .upsert({ group_id: groupId, unlocked: {} });
+    const resetUnlocked = {};
+    for (const id of Object.keys(PACKETS)) resetUnlocked[id] = false;
+    await supabase.from("group_cards").upsert({
+      group_id: groupId,
+      unlocked: resetUnlocked,
+    });
   }
 });
 
-// ─── Logout ───────────────────────────────────────────────────────────────────
+// ─── Bottone back: admin → /admin.html, studenti → logout ────────────────────
 initDashboard();
 
 document.getElementById("logoutArr").addEventListener("click", async () => {
-  await supabase.auth.signOut();
-  window.location.href = "/";
+  // Il ruolo viene letto dopo initDashboard, quindi è già disponibile
+  // Usiamo un data-attribute impostato da initDashboard per semplicità
+  const isAdmin =
+    document.getElementById("logoutArr").dataset.isAdmin === "true";
+  if (isAdmin) {
+    window.location.href = "/admin.html";
+  } else {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
 });
