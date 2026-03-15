@@ -122,6 +122,10 @@ async function loadCardStates() {
     .eq("group_id", groupId)
     .maybeSingle();
 
+  console.log("group_cards data:", data);
+  console.log("group_cards error:", error);
+  console.log("groupId:", groupId);
+
   const assigned = data?.assigned_cards || {};
   const unlocked = data?.unlocked || {};
   const lockStatus = data?.lock_status || {};
