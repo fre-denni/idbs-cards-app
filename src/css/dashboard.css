@@ -407,7 +407,7 @@
    perché hover-tilt proietta il glare fuori dai bordi */
 .item.state-unlocked {
   overflow: visible;
-  cursor: pointer; /* cambio: da default a pointer per indicare cliccabilità */
+  cursor: pointer;
 }
 
 /* hover-tilt dentro la griglia */

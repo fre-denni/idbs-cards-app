@@ -12,7 +12,6 @@ export default defineConfig({
         main: resolve(__dirname, "src/index.html"),
         dashboard: resolve(__dirname, "src/dashboard.html"),
         admin: resolve(__dirname, "src/admin.html"),
-        reset: resolve(__dirname, "src/reset.html"),
       },
     },
   },
