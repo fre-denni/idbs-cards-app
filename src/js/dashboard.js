@@ -116,7 +116,7 @@ async function initDashboard() {
 
 // ─── Carica stati + carte assegnate dal DB ────────────────────────────────────
 async function loadCardStates() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("group_cards")
     .select("assigned_cards, unlocked, lock_status")
     .eq("group_id", groupId)
