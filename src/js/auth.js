@@ -68,7 +68,7 @@ async function handleEmailStep() {
 
   if (!student) {
     errorMessage.innerText =
-      "Email not founded in the students list. Contact federico.denni@polimi.it if you think is an error.";
+      "Email not found in the students list. Contact federico.denni@polimi.it if you think is an error.";
     return;
   }
 
