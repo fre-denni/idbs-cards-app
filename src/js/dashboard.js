@@ -421,10 +421,7 @@ function closeAll() {
     enlarged.style.display = "";
     enlarged.innerHTML = "";
     sunrays.classList.remove("is-fading");
-    // Rimuovi is-active dopo che l'overlay è chiuso
-    if (itemToRestore && wasJustUnlocked) {
-      itemToRestore.classList.remove("is-active");
-    }
+    if (itemToRestore) itemToRestore.classList.remove("is-active");
     overlay.removeEventListener("transitionend", onOverlayEnd);
   };
   overlay.addEventListener("transitionend", onOverlayEnd);
