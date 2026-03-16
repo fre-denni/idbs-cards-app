@@ -219,7 +219,7 @@ function renderCardsTable() {
     label.appendChild(chk);
     label.appendChild(
       document.createTextNode(
-        allLocked ? " Click to unblock" : " Click to block",
+        allLocked ? " Click to block" : " Click to unblock",
       ),
     );
 
