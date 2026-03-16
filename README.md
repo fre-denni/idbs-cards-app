@@ -26,11 +26,7 @@ You'll need to setup a Supabase dataset (insert here details), then simply git c
 
 If you are curios about the project and want to learn more, contact Federico Denni at: federico.denni@polimi.it or on his github account.
 
----
-
-## 🇵🇸 Free Palestine 🇵🇸
-
----
+#### 🇵🇸 Free Palestine 🇵🇸
 
 ##### To do
 
@@ -38,13 +34,3 @@ If you are curios about the project and want to learn more, contact Federico Den
   - [ ] fancy og tags for linkedin and socials
   - [ ] add and update meta tags
   - [ ] add aria-labels
-- [x] cards
-  - [x] add logic of shuffle to supabase table
-  - [x] add policies that admin can reshuffle singular cards
-  - [x] add graphics and connect graphics to display them on dashbaord and admin
-- [x] admin
-  - [x] add table to control groups (add/cut them, modify number of members and members)
-  - [x] add controls to shuffle cards
-  - [x] add access to a private dashboard to test and see (group 20)
-- [x] dashboard
-- [x] add text and informations (add name that user has chose)
