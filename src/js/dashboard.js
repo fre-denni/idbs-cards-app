@@ -29,6 +29,33 @@ const PACKETS = {
 const assignedCardSrc = {};
 const cardStates = {};
 
+// ─── Pool carte per modalità guest (randomizzazione locale) ───────────────────
+const GUEST_POOL = {
+  jtbd: ["zapping", "community", "discovery", "filtering", "interactive"],
+  agency: ["silent", "activator", "companion", "mirror", "storyteller"],
+  behavior: ["playful", "calm", "deconstructed", "exposed", "mimetic"],
+  sensor: ["sensor 1", "sensor 2", "sensor 3", "sensor 4", "sensor 5"],
+  actuator: [
+    "actuator 1",
+    "actuator 2",
+    "actuator 3",
+    "actuator 4",
+    "actuator 5",
+  ],
+  brand: ["brand 1", "brand 2", "brand 3", "brand 4", "brand 5"],
+};
+
+function pickRandom(pool) {
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ─── Numero guest progressivo (localStorage) ─────────────────────────────────
+function getGuestNumber() {
+  const n = parseInt(localStorage.getItem("idbs-guest-count") || "0") + 1;
+  localStorage.setItem("idbs-guest-count", n);
+  return n;
+}
+
 // ─── UI State machine ─────────────────────────────────────────────────────────
 // idle | pack-open | opening | card-visible | card-viewing
 let uiState = "idle";
@@ -427,9 +454,9 @@ function closeAll() {
   overlay.addEventListener("transitionend", onOverlayEnd);
 }
 
-// ─── Segna carta come unlocked nel DB ─────────────────────────────────────────
+// ─── Segna carta come unlocked nel DB (skip in guest mode) ───────────────────
 async function unlockCard(cardId) {
-  if (!groupId) return;
+  if (!groupId || isGuest) return;
 
   // 1. Leggi unlocked attuale
   const { data } = await supabase
@@ -448,42 +475,76 @@ async function unlockCard(cardId) {
   if (error) console.error("unlockCard error:", error);
 }
 
-// ─── [EASTER EGG] Tasto R: reset unlocked → locked (assigned rimane) ─────────
+// ─── [EASTER EGG] Tasto R ────────────────────────────────────────────────────
 document.addEventListener("keydown", async (e) => {
   if (e.key !== "r" && e.key !== "R") return;
   if (uiState === "opening") return;
 
   closeAll();
 
-  // Reset locale: unlocked → locked (blocked rimane blocked)
+  if (isGuest) {
+    // Guest: ri-randomizza tutte le carte localmente
+    for (const id of Object.keys(PACKETS)) {
+      cardStates[id] = "unlocked";
+      assignedCardSrc[id] = cardSrc(id, pickRandom(GUEST_POOL[id]));
+    }
+    renderAllCards();
+    attachItemListeners();
+    return;
+  }
+
+  // Utente normale: reset unlocked → locked solo per questo gruppo
   for (const id of Object.keys(PACKETS)) {
     if (cardStates[id] === "unlocked") cardStates[id] = "locked";
   }
   renderAllCards();
 
-  // Reset DB: solo il campo unlocked, assigned_cards e lock_status invariati
   if (groupId) {
     const resetUnlocked = {};
     for (const id of Object.keys(PACKETS)) resetUnlocked[id] = false;
-    await supabase.from("group_cards").upsert({
-      group_id: groupId,
-      unlocked: resetUnlocked,
-    });
+    await supabase
+      .from("group_cards")
+      .update({ unlocked: resetUnlocked })
+      .eq("group_id", groupId);
   }
 });
 
-// ─── Bottone back: admin → /admin.html, studenti → logout ────────────────────
-initDashboard();
+// ─── Entry point: guest o utente normale ─────────────────────────────────────
+const isGuest =
+  new URLSearchParams(window.location.search).get("guest") === "true";
+if (isGuest) {
+  initGuest();
+} else {
+  initDashboard();
+}
+
+// ─── Modalità guest ───────────────────────────────────────────────────────────
+function initGuest() {
+  const n = getGuestNumber();
+  document.getElementById("userName").innerText = `Guest n°${n}`;
+  document.getElementById("groupName").innerText = "—";
+
+  const backBtn = document.getElementById("logoutArr");
+  backBtn.innerHTML = "&larr; LOG-OUT";
+  backBtn.dataset.isAdmin = "false";
+
+  // Tutte le carte unlocked con randomizzazione locale
+  for (const id of Object.keys(PACKETS)) {
+    cardStates[id] = "unlocked";
+    assignedCardSrc[id] = cardSrc(id, pickRandom(GUEST_POOL[id]));
+  }
+
+  renderAllCards();
+  attachItemListeners();
+}
 
 document.getElementById("logoutArr").addEventListener("click", async () => {
-  // Il ruolo viene letto dopo initDashboard, quindi è già disponibile
-  // Usiamo un data-attribute impostato da initDashboard per semplicità
   const isAdmin =
     document.getElementById("logoutArr").dataset.isAdmin === "true";
   if (isAdmin) {
     window.location.href = "/admin.html";
   } else {
-    await supabase.auth.signOut();
+    if (!isGuest) await supabase.auth.signOut();
     window.location.href = "/";
   }
 });
