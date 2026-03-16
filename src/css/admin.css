@@ -413,56 +413,20 @@ body {
   font-size: 1rem;
 }
 
-/* Groups list: 4 colonne */
-#groups-list {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: start;
+/* Pannello studenti non assegnati — appare in fondo alla griglia gruppi */
+.unassigned-panel {
+  border-color: #1e1e1e;
+  background: #020202;
 }
 
-/* Fallback per schermi stretti */
-@media (max-width: 1100px) {
-  #groups-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (max-width: 600px) {
-  #groups-list {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Form aggiunta studente: due input affiancati */
-.add-student-form input {
-  width: 160px;
-}
-
-/* Tag stato carta nella tabella (sostituisce il toggle per cella) */
-.card-state-tag {
-  display: inline-block;
-  font-size: 0.65rem;
-  font-family: "Departure Mono";
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  margin: 0.25rem 0.25rem 0.25rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.tag-locked {
-  background: #1a2a1a;
-  color: #6ec96e;
-  border: 1px solid #2e4a2e;
-}
-
-.tag-blocked {
-  background: #1a1a1a;
+.unassigned-panel .group-card-title {
   color: #666;
-  border: 1px solid #333;
 }
 
-/* ── Da aggiungere in fondo all'admin.css esistente ── */
+/* Due bottoni affiancati per remove + delete */
+.student-row .btn-icon + .btn-icon {
+  margin-left: 0.2rem;
+}
 
 /* Groups list: 4 colonne */
 #groups-list {
@@ -523,4 +487,117 @@ body {
   .admin-header {
     display: none;
   }
+}
+
+/* ── Students Registry table ── */
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-family: "Instrument Sans", sans-serif;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.students-table th,
+.students-table td {
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid #1a1a1a;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.students-table thead th {
+  background: #111;
+  color: var(--secondary-gray);
+  font-family: "Departure Mono";
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.students-table tbody tr:hover td {
+  background: #080808;
+}
+
+.students-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.inline-input {
+  width: 100%;
+  padding: 0.25rem 0.4rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--white);
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-family: "Instrument Sans", sans-serif;
+  transition: border-color 0.15s;
+}
+
+.inline-input:hover {
+  border-color: #444;
+}
+.inline-input:focus {
+  border-color: var(--white);
+  outline: none;
+  background: #0a0a0a;
+}
+
+/* Groups list: 4 colonne */
+#groups-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Fallback per schermi stretti */
+@media (max-width: 1100px) {
+  #groups-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  #groups-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Form aggiunta studente: due input affiancati */
+.add-student-form input {
+  width: 160px;
+}
+
+/* Tag stato carta nella tabella (sostituisce il toggle per cella) */
+.card-state-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-family: "Departure Mono";
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tag-unlocked {
+  background: #1a2a1a;
+  color: #6ec96e;
+  border: 1px solid #2e4a2e;
+}
+
+.tag-locked {
+  background: #2a2200;
+  color: #c9b84e;
+  border: 1px solid #4a3e00;
+}
+
+.tag-blocked {
+  background: #1a1a1a;
+  color: #666;
+  border: 1px solid #333;
 }

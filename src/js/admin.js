@@ -369,7 +369,7 @@ function renderCardsTable() {
   }
 }
 
-// ─── Render lista gruppi (4 colonne) ─────────────────────────────────────────
+// ─── Render lista gruppi (4 colonne) + pannello unassigned ───────────────────
 function renderGroupsList() {
   const container = document.getElementById("groups-list");
   container.innerHTML = "";
@@ -384,14 +384,14 @@ function renderGroupsList() {
     const header = document.createElement("div");
     header.className = "group-card-header";
     header.innerHTML = `<span class="group-card-title">Group ${g.group_number}</span>`;
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "btn-sm btn-danger";
-    deleteBtn.innerText = "Delete";
-    deleteBtn.addEventListener("click", () => deleteGroup(g));
-    header.appendChild(deleteBtn);
+    const deleteGroupBtn = document.createElement("button");
+    deleteGroupBtn.className = "btn-sm btn-danger";
+    deleteGroupBtn.innerText = "Delete group";
+    deleteGroupBtn.addEventListener("click", () => deleteGroup(g));
+    header.appendChild(deleteGroupBtn);
     div.appendChild(header);
 
-    // Lista studenti
+    // Lista studenti con due azioni: remove (dal gruppo) e delete (dal sistema)
     const list = document.createElement("div");
     list.className = "students-list";
     if (students.length === 0) {
@@ -404,12 +404,22 @@ function renderGroupsList() {
           <span class="name">${s.name ?? "?"}</span>
           <span class="email">${s.email}</span>
         `;
-        const rm = document.createElement("button");
-        rm.className = "btn-icon btn-danger";
-        rm.title = "Remove from group";
-        rm.innerText = "✕";
-        rm.addEventListener("click", () => removeStudentFromGroup(s));
-        row.appendChild(rm);
+        // Remove dal gruppo (studente resta nel sistema)
+        const rmBtn = document.createElement("button");
+        rmBtn.className = "btn-icon";
+        rmBtn.title = "Remove from group (keeps student in registry)";
+        rmBtn.innerText = "✕";
+        rmBtn.addEventListener("click", () => removeStudentFromGroup(s));
+
+        // Delete dal sistema
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn-icon btn-danger";
+        delBtn.title = "Delete student permanently";
+        delBtn.innerText = "🗑";
+        delBtn.addEventListener("click", () => deleteStudent(s));
+
+        row.appendChild(rmBtn);
+        row.appendChild(delBtn);
         list.appendChild(row);
       }
     }
@@ -452,7 +462,77 @@ function renderGroupsList() {
     container.appendChild(div);
   }
 
-  if (allGroups.length === 0) {
+  // ── Pannello studenti non assegnati ──
+  const unassigned = allStudents.filter(
+    (s) => !s.group_id && s.role !== "admin",
+  );
+  const unassignedDiv = document.createElement("div");
+  unassignedDiv.className = "group-card unassigned-panel";
+
+  const uHeader = document.createElement("div");
+  uHeader.className = "group-card-header";
+  uHeader.innerHTML = `<span class="group-card-title" style="color:#888">Unassigned (${unassigned.length})</span>`;
+  unassignedDiv.appendChild(uHeader);
+
+  if (unassigned.length === 0) {
+    const empty = document.createElement("span");
+    empty.style.cssText = "color:#555;font-size:0.8rem";
+    empty.innerText = "All students are assigned";
+    unassignedDiv.appendChild(empty);
+  } else {
+    const list = document.createElement("div");
+    list.className = "students-list";
+    for (const s of unassigned) {
+      const row = document.createElement("div");
+      row.className = "student-row";
+      row.innerHTML = `
+        <span class="name">${s.name ?? "?"}</span>
+        <span class="email">${s.email}</span>
+      `;
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn-icon btn-danger";
+      delBtn.title = "Delete student permanently";
+      delBtn.innerText = "🗑";
+      delBtn.addEventListener("click", () => deleteStudent(s));
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    }
+    unassignedDiv.appendChild(list);
+  }
+
+  // Form per aggiungere studente senza gruppo
+  const addForm = document.createElement("div");
+  addForm.className = "add-student-form";
+  const emailIn = document.createElement("input");
+  emailIn.type = "email";
+  emailIn.placeholder = "Email…";
+  const nameIn = document.createElement("input");
+  nameIn.type = "text";
+  nameIn.placeholder = "Name (optional)";
+  const addBtn = document.createElement("button");
+  addBtn.className = "btn-sm";
+  addBtn.innerText = "+ Add to registry";
+  const errSpan = document.createElement("span");
+  errSpan.className = "group-error";
+
+  const doAddUnassigned = () => addUnassignedStudent(emailIn, nameIn, errSpan);
+  addBtn.addEventListener("click", doAddUnassigned);
+  emailIn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doAddUnassigned();
+  });
+  nameIn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doAddUnassigned();
+  });
+
+  addForm.appendChild(emailIn);
+  addForm.appendChild(nameIn);
+  addForm.appendChild(addBtn);
+  addForm.appendChild(errSpan);
+  unassignedDiv.appendChild(addForm);
+
+  container.appendChild(unassignedDiv);
+
+  if (allGroups.length === 0 && unassigned.length === 0) {
     container.innerHTML = `<p style="color:#555" class="text-small-body">No groups yet. Create one above.</p>`;
   }
 }
@@ -465,11 +545,27 @@ async function addStudentToGroup(groupId, emailInput, nameInput, errSpan) {
   const name = nameInput.value.trim() || null;
   if (!email) return;
 
-  const student = allStudents.find((s) => s.email === email);
+  let student = allStudents.find((s) => s.email === email);
+
+  // Se non esiste nella lista, crealo direttamente nel DB
   if (!student) {
-    errSpan.innerText = "Email not found in students list.";
+    const { data: newStudent, error } = await supabase
+      .from("students")
+      .insert({ email, name, group_id: groupId, role: "student" })
+      .select()
+      .single();
+    if (error) {
+      errSpan.innerText = error.message;
+      return;
+    }
+    allStudents.push(newStudent);
+    emailInput.value = "";
+    nameInput.value = "";
+    renderCardsTable();
+    renderGroupsList();
     return;
   }
+
   if (student.group_id === groupId) {
     errSpan.innerText = "Already in this group.";
     return;
@@ -485,7 +581,7 @@ async function addStudentToGroup(groupId, emailInput, nameInput, errSpan) {
   }
 
   const updateData = { group_id: groupId };
-  if (name) updateData.name = name; // aggiorna il nome solo se fornito
+  if (name) updateData.name = name;
 
   const { error } = await supabase
     .from("students")
@@ -516,6 +612,54 @@ async function removeStudentFromGroup(student) {
     return;
   }
   student.group_id = null;
+  renderCardsTable();
+  renderGroupsList();
+}
+
+async function addUnassignedStudent(emailInput, nameInput, errSpan) {
+  errSpan.innerText = "";
+  const email = emailInput.value.trim().toLowerCase();
+  const name = nameInput.value.trim() || null;
+  if (!email) return;
+
+  if (allStudents.find((s) => s.email === email)) {
+    errSpan.innerText = "Email already exists.";
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("students")
+    .insert({ email, name, role: "student" })
+    .select()
+    .single();
+  if (error) {
+    errSpan.innerText = error.message;
+    return;
+  }
+
+  allStudents.push(data);
+  emailInput.value = "";
+  nameInput.value = "";
+  renderCardsTable();
+  renderGroupsList();
+}
+
+async function deleteStudent(student) {
+  if (
+    !confirm(
+      `Delete ${student.name ?? student.email} permanently? This cannot be undone.`,
+    )
+  )
+    return;
+  const { error } = await supabase
+    .from("students")
+    .delete()
+    .eq("id", student.id);
+  if (error) {
+    alert(error.message);
+    return;
+  }
+  allStudents = allStudents.filter((s) => s.id !== student.id);
   renderCardsTable();
   renderGroupsList();
 }
