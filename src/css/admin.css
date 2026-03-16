@@ -24,6 +24,10 @@ body {
   gap: 1rem;
 }
 
+.admin-header-left {
+  display: flex;
+}
+
 .admin-main {
   display: flex;
   flex-direction: column;
@@ -513,4 +517,10 @@ body {
   background: #1a1a1a;
   color: #666;
   border: 1px solid #333;
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    display: none;
+  }
 }

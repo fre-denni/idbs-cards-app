@@ -28,6 +28,8 @@ async function initAdmin() {
   const admin = await requireAdmin();
   if (!admin) return;
 
+  document.getElementById("userName").innerText = admin.name ?? "Stranger";
+
   await loadAllData();
   renderCardsTable();
   renderGroupsList();
@@ -216,7 +218,9 @@ function renderCardsTable() {
     });
     label.appendChild(chk);
     label.appendChild(
-      document.createTextNode(allLocked ? " All locked" : " All blocked"),
+      document.createTextNode(
+        allLocked ? " Click to unblock" : " Click to block",
+      ),
     );
 
     // Randomize tutta la colonna (resetta anche unlocked)

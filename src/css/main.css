@@ -111,6 +111,20 @@
   text-transform: uppercase;
 }
 
+.text-h3-header {
+  font-family: "Departure Mono";
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 155%;
+}
+
+.text-mobile-body {
+  font-family: "Instrument Sans", Arial, Helvetica, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 130%;
+}
+
 /*
 -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
                 BASE
@@ -435,4 +449,38 @@ button:focus {
   color: var(--color-text-secondary);
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  * {
+    visibility: hidden;
+  }
+  .mobile {
+    display: block;
+    visibility: visible;
+  }
+  .mobile p {
+    visibility: visible;
+    display: block;
+    color: var(--white);
+  }
+  header {
+    visibility: visible;
+    width: 100%;
+    padding: 0;
+    padding-top: var(--space-md);
+    padding-bottom: var(--space-lg);
+    margin: 0;
+  }
+  header p {
+    visibility: visible;
+  }
+  header .content {
+    visibility: hidden;
+    display: none;
+  }
 }

@@ -38,40 +38,13 @@ If you are curios about the project and want to learn more, contact Federico Den
   - [ ] fancy og tags for linkedin and socials
   - [ ] add and update meta tags
   - [ ] add aria-labels
-- [ ] cards
-  - [ ] add logic of shuffle to supabase table
-  - [ ] add policies that admin can reshuffle singular cards
-  - [ ] add graphics and connect graphics to display them on dashbaord and admin
-- [ ] admin
-  - [ ] add table to control groups (add/cut them, modify number of members and members)
-  - [ ] add controls to shuffle cards
-  - [ ] add access to a private dashboard to test and see (group 20)
-- [ ] dashboard
-- [ ] add text and informations (add name that user has chose)
-- [ ] add
-
-Ok! Risolto tutto. è arrivato il momento di lavorare sul database e su admin.html. Il piano è il seguente:
-
-invece di avere le card randomizzate, queste verrano randomicamente scelte nella tabella group_cards del database. Questa tabella avrà nella colonna "assigned_cards" le card assegnate per gruppo (per il loro nome corrispondente al .webp, caricherò un file con tutti i nomi delle card).
-
-Lo stato di "blocked" e "locked" sarà controllato dall'admin. Lo status base di ogni carta sarà "blocked". Nella Dashboard di admin.html saranno presenti degli checkbox radio che permetteranno di cambiare tra lo status blocked e locked. L'admin potrà selezionare i checkbox per rendere true o false lo stato. L'utente avrà poi la possibilità (selezionando il pacchetto che come è ora corrisponde a locked) di cambiare lo status ad unlocked.
-
-Il tasto "R" permette adesso di passare da unlocked a locked, ma sarà un easter-egg nascosto utile solo per debug o per gli user per ripetere l'esperienza di spacchetto. La carta sarà sempre assegnata a livello di database. Cliccando sulla card unlocked invece, l'animazione della card sarà come il pacchetto: prima scende in basso, poi ricompare al centro in versione enlarged.
-
-Per quanto riguarda l'admin.html. La grafica dell'admin HTML importa veramente poco. Ma ci devono essere dei punti fondamentali per aiutare l'admin a controllare tutto:
-
-Innanzitutto un link alla propria pagina dashboard per aiutare a visionare e fare test delle varie card. Qui il funzionamento sarà esattamente come la normale pagina dashboard.
-
-Ci sarà poi una tabella. Nella tabella saranno presenti: numero gruppo, studenti nel gruppo (nome) e email studente (variabili tra 4 e 5), e una colonna per ogni tipo di carta (jtbd, agency, behavior, sensor, actuator, brand) in queste colonne saranno presenti le carte assegnate (vanno bene anche solo i nomi per ora). Facciamo in modo che i checkbox radio saranno presenti nelle varie colonne in modo che si possano selezionare e bloccare tutti insieme.
-
-La tabella deve essere modificabile in modo che gli admin possano:
-
-Cambiare la card specifica assegnata per gruppo (facendo in modo di fare di nuovo una selezione randomica solo della carta di quella categoria)
-
-fare una randomizzazione completa di tutte le carte per gruppo
-
-Fare una randomizzazione completa di tutte le carte di tutti i gruppi
-
-Aggiungere e o eliminare gruppi scegliendone i membri (e aggiungere o togliere studenti da un gruppo) - richiederà anche di inserire la mail
-
-Fammi sapere se hai bisogno di dati dal database
+- [x] cards
+  - [x] add logic of shuffle to supabase table
+  - [x] add policies that admin can reshuffle singular cards
+  - [x] add graphics and connect graphics to display them on dashbaord and admin
+- [x] admin
+  - [x] add table to control groups (add/cut them, modify number of members and members)
+  - [x] add controls to shuffle cards
+  - [x] add access to a private dashboard to test and see (group 20)
+- [x] dashboard
+- [x] add text and informations (add name that user has chose)
